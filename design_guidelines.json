@@ -1,0 +1,83 @@
+{
+  "theme": "light",
+  "archetype": "Archetype 4: Swiss & High-Contrast",
+  "mood": "Authoritative, transparent, professional, calming, institutional",
+  "colors": {
+    "background": "#FFFFFF",
+    "surface": "#F8FAFC",
+    "primary": "#002FA7",
+    "primary_hover": "#002480",
+    "secondary": "#F1F5F9",
+    "text_main": "#0F172A",
+    "text_muted": "#64748B",
+    "success": "#10B981",
+    "warning": "#F59E0B",
+    "border": "#E2E8F0"
+  },
+  "typography": {
+    "heading_font": "Cabinet Grotesk, sans-serif",
+    "body_font": "IBM Plex Sans, sans-serif",
+    "mono_font": "IBM Plex Mono, monospace",
+    "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tighter font-bold",
+    "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight font-semibold",
+    "h3": "text-xl sm:text-2xl tracking-tight font-medium",
+    "body": "text-base leading-relaxed text-slate-700",
+    "small": "text-sm tracking-wide text-slate-500 uppercase",
+    "numbers": "font-mono font-medium tracking-tight"
+  },
+  "layout_and_spacing": {
+    "dashboard_grid": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
+    "card_padding": "p-6 sm:p-8",
+    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "surface_style": "bg-white border border-slate-200 rounded-none shadow-none hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
+  },
+  "components": {
+    "button_primary": "bg-[#002FA7] text-white px-6 py-3 font-medium tracking-wide hover:bg-[#002480] transition-colors rounded-none",
+    "button_secondary": "bg-slate-100 text-slate-900 px-6 py-3 font-medium tracking-wide border border-slate-200 hover:bg-slate-200 transition-colors rounded-none",
+    "input": "w-full border border-slate-300 px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-[#002FA7] focus:border-transparent font-sans rounded-none",
+    "card": "bg-white border border-slate-200 p-6 md:p-8",
+    "table": "w-full text-left border-collapse",
+    "table_th": "border-b border-slate-200 py-4 px-4 text-sm font-medium text-slate-500 uppercase tracking-wider",
+    "table_td": "border-b border-slate-100 py-4 px-4 text-slate-900 font-mono text-sm",
+    "badge_success": "bg-emerald-50 text-emerald-700 px-2 py-1 text-xs font-semibold tracking-wide border border-emerald-200",
+    "badge_warning": "bg-amber-50 text-amber-700 px-2 py-1 text-xs font-semibold tracking-wide border border-amber-200"
+  },
+  "icons_library": "lucide-react",
+  "motion_and_interactions": {
+    "hover_state": "hover:-translate-y-1 hover:shadow-lg transition-all duration-300",
+    "focus_state": "focus:ring-2 focus:ring-offset-2 focus:ring-[#002FA7] outline-none",
+    "page_transition": "animate-in fade-in slide-in-from-bottom-4 duration-500"
+  },
+  "images": [
+    {
+      "category": "hero_background",
+      "url": "https://images.pexels.com/photos/18800734/pexels-photo-18800734.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Modern glass office building for trust and corporate authority on the landing page."
+    },
+    {
+      "category": "abstract_data",
+      "url": "https://images.pexels.com/photos/6203470/pexels-photo-6203470.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Blue line chart on grid representing algo trading patterns for marketing sections."
+    },
+    {
+      "category": "team_about",
+      "url": "https://images.pexels.com/photos/4963417/pexels-photo-4963417.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Professional team representing Kanak Infosys management."
+    }
+  ],
+  "pages_instructions": {
+    "landing_page": "High-contrast design. Stark white background. Hero section with image overlay (max 30% black if text is light, or minimal white overlay if text is dark). Large 'Cabinet Grotesk' typography. Clear call to action for Login/Register.",
+    "login_register": "Clean, distraction-free form. Input fields for Name, Email, Referral Code. Minimalist, brutalist borders.",
+    "client_dashboard": "Modular UI. 'North Star' single-metric focus: Deposit Balance and Daily Earnings prominently displayed. Use 'Control Room' grid. Flat cards with 1px borders. Use monospace font for INR values (e.g., ₹1,00,000). Show referral code in a copyable field.",
+    "client_profile": "Form-centric. 2-line address, bank details inputs. Clear deposit CTA. Ensure forms are accessible.",
+    "company_policy": "Editorial layout. Generous reading width (max-w-prose). High contrast text for terms (6-month lock-in, min deposit 1 lakh INR).",
+    "admin_dashboard": "Data-heavy but calm. Recharts for daily revenue line chart. High-level metric cards for total revenue and payouts.",
+    "admin_clients_list": "Data table utilizing Shadcn UI. Features 'Export to Excel' button. Clear alignment for financial numbers (right-aligned).",
+    "admin_referral_tree": "Visual hierarchy. Use nested lists or organizational chart structure to display parent-child referral relationships. Card-based nodes."
+  },
+  "specific_requirements": {
+    "currency_formatting": "Always format numbers in INR (₹) using Indian numbering system (e.g., ₹1,00,000 for 1 lakh, ₹1,00,00,000 for 1 crore).",
+    "data_testid": "Apply data-testid to all interactive and key elements using kebab-case and role-based naming (e.g., login-submit-button, deposit-amount-input)."
+  },
+  "instructions_to_main_agent": "Ensure you output only JavaScript (.js/.jsx) files and not TypeScript (.ts/.tsx) files for the frontend implementation. Use standard Shadcn UI components but heavily customize them via Tailwind classes provided in these guidelines. Apply data-testid to all interactive elements."
+}

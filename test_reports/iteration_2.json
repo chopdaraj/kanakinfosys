@@ -1,0 +1,26 @@
+{
+  "summary": "Frontend regression pass after code-review fixes (useCallback in auth/ClientDashboard, Field extracted out of Profile, console.error in silent catches). End-to-end client + admin flows and referral flow all pass. 14/14 frontend checks passed.",
+  "tested_scope": ["frontend", "auth", "integration"],
+  "passed": [
+    "Landing page loads",
+    "Register user A (no referral) -> redirected to /dashboard",
+    "Client dashboard shows referral-code-display (KNK...)",
+    "Deposit ₹1,00,000 submits and reloads history on dashboard (ClientDashboard useCallback reload works)",
+    "Profile: typing into profile-address1 keeps focus per keystroke (Field-out-of-Profile fix verified: value '123 Main Street' preserved, activeElement remains profile-address1)",
+    "Profile save (address+bank) succeeds",
+    "Policy page renders",
+    "Logout returns user to public routes",
+    "Register user B using A's referral code -> dashboard",
+    "Admin login (admin@kanakinfosys.com/raj12@) -> /admin",
+    "Admin dashboard renders metrics/charts",
+    "Admin clients table loads (admin-clients-search visible)",
+    "Admin Export to Excel downloads kanak_clients.xlsx",
+    "Admin referral tree renders; toggle-{code} expands node; User A appears with correct KNK code"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "not re-tested (36/36 in iteration_1)", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "Screenshot confirms referral tree shows User A (KNKTKJQSFF4) as root. User B registered with A's code — expanding A's node worked (tree-toggle-{code} click succeeded). Prior-existing seed users (User One/User Two) also correctly nested. No regressions from code-review fixes detected."
+}

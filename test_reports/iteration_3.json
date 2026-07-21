@@ -1,0 +1,24 @@
+{
+  "summary": "Iteration 3 smoke test: KYC fields, deposit approval workflow, manual profit credit, admin edit/delete, and frontend routes all functional. Registered fresh client, submitted 100k deposit (status=pending, not counted toward principal), admin approved via /api/admin/deposits/{id}/approve (principal jumped to 100000), credited 500 profit via /api/admin/clients/{id}/credit-profit (total_earned/today_earning updated, /profits/my returned it), rejected a second 150k deposit (status=rejected, excluded from principal). Profile PUT accepts aadhaar/pan numbers + 4 base64 KYC docs and persists via /auth/me. Admin PUT/GET/DELETE clients endpoints work; GET returns {user, deposits, profits}. Frontend: Kanak logo shown, no 'Payout Today' floating card, 'Request Deposit' button + PENDING badge visible, /admin/pending shows pending row with Approve/Reject and clears after approve, /admin/clients rows expose View + Delete (7 rows -> 8 view btns incl header/nav, 7 delete btns), /admin/clients/:id renders identity, KYC docs (empty state), principal/total earned/today credited, Edit toggle, and Credit Daily Profit form.",
+  "tested_scope": ["backend", "frontend", "auth", "integration"],
+  "passed": [
+    "POST /api/deposits creates status=pending",
+    "Pending deposit excluded from /earnings/summary principal (still 0)",
+    "POST /api/admin/deposits/{id}/approve moves to approved, principal becomes 100000",
+    "POST /api/admin/deposits/{id}/reject moves to rejected, excluded from principal",
+    "GET /api/admin/deposits/pending lists only pending",
+    "POST /api/admin/clients/{id}/credit-profit updates total_earned & today_earning; /profits/my returns entry",
+    "PUT /api/users/profile accepts aadhaar_number/pan_number/aadhaar_front/back/pan_front/back; GET /api/auth/me returns them",
+    "PUT /api/admin/clients/{id} updates name+bank",
+    "GET /api/admin/clients/{id} returns {user, deposits, profits}",
+    "Landing page has Kanak logo image and no 'Payout Today' card",
+    "Client dashboard 'Request Deposit' button creates pending row",
+    "/admin/pending Approve removes row",
+    "/admin/clients has View + Delete buttons; detail page renders KYC + credit form + Edit toggle"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true
+}

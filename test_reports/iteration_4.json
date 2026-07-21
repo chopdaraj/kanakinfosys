@@ -1,0 +1,23 @@
+{
+  "summary": "Iteration 4 (Withdrawals, KYC, Bulk Credit) verified across backend and frontend. All 3 new capabilities work end-to-end. 11/11 targeted checks passed.",
+  "tested_scope": ["backend", "frontend", "auth", "integration"],
+  "passed": [
+    "Backend POST /withdrawals with zero unlocked capital returns 400 with 'Only ₹0 available for withdrawal'",
+    "Backend POST /withdrawals succeeds (status=pending) after backdating lock_until on an approved deposit via Mongo",
+    "Backend GET /withdrawals/my returns the pending withdrawal for the client",
+    "Backend GET /admin/withdrawals/pending lists pending withdrawal with user_name and user_email",
+    "Backend non-admin POST /admin/withdrawals/{id}/approve => 403; admin approve => 200 ok:true",
+    "Backend POST /admin/clients/{id}/kyc invalid status => 400; verified => 200; GET /admin/clients/{id}.user.kyc_status='verified'",
+    "Backend POST /admin/bulk-credit-profit empty body => 400; rate_percent=0.1 credits N clients (returns credited_clients, total_credited); flat_amount=100 credits all clients ₹100 each; client /profits/my grows accordingly",
+    "Frontend Admin dashboard shows bulk-credit-panel with bulk-rate-input and bulk-credit-button (verified via data-testids)",
+    "Frontend Bulk Credit button clickable with rate 0.1 (no UI error; backend returns success)",
+    "Frontend Admin client detail shows KYC Status: VERIFIED badge with Verify/Reject buttons; clicking Verify shows 'KYC Verified' toast and badge updates",
+    "Frontend Client dashboard has withdraw-button below Request Deposit; clicking with amount 500 shows toast 'Only ₹0 available for withdrawal'"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "Bulk credit toast text was not explicitly parsed by the automation but backend call succeeds and admin panel functions correctly (no console/API errors). KYC field is nested at response.user.kyc_status in GET /admin/clients/{id}."
+}

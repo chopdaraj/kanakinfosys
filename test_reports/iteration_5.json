@@ -1,0 +1,20 @@
+{
+  "summary": "Iteration 5 verified: KYC gating on deposits, pending_withdrawals in admin/stats, automated daily auto-credit cron, /admin/withdrawals page + nav link, and Today's Payout sub-text all working correctly.",
+  "tested_scope": ["backend", "frontend", "integration"],
+  "passed": [
+    "POST /api/deposits with kyc_status='pending' -> HTTP 403 detail='KYC verification required before making a deposit'",
+    "POST /api/admin/clients/{id}/kyc {status:'verified'} -> {ok:true, kyc_status:'verified'}",
+    "POST /api/deposits after KYC verified with amount=150000 -> HTTP 200, status='pending'",
+    "GET /api/admin/stats returns pending_withdrawals (integer=0)",
+    "Backend log shows 'Auto-credit: 4 clients, INR 400.00' — daily_auto_credit_loop ran at startup",
+    "AppNav renders 'Withdrawals' link with data-testid nav-admin-withdrawals for admins",
+    "/admin/withdrawals renders 'Pending Withdrawal Requests' heading with empty state 'No pending withdrawals.'",
+    "Today's Payout card sub-text renders '{n} withdrawals pending' (visually shows '0 withdrawals pending')"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "Approve/Reject buttons could not be exercised because no pending withdrawals exist in DB; code + data-testids (wd-approve-{id}, wd-reject-{id}) verified via source review."
+}

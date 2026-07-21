@@ -1,0 +1,37 @@
+{
+  "summary": "First backend smoke pass for Kanak Infosys. Registered two clients (u2 referred by u1), exercised auth, profile, deposits (min-lock enforcement + 6-month lock), earnings summary/daily, referrals tree, and all admin endpoints (including xlsx export). 35/36 checks passed. Only failure: GET /api/ returns 404 due to route being declared after app.include_router(api).",
+  "tested_scope": ["backend", "auth", "integration"],
+  "passed": [
+    "POST /api/auth/register creates client with KNK-prefixed referral_code and JWT",
+    "Register with valid referral sets referred_by_code; invalid referral -> 400",
+    "Duplicate email registration -> 400",
+    "Admin login (admin@kanakinfosys.com/raj12@) -> 200 with role=admin",
+    "Wrong password -> 401",
+    "GET /api/auth/me with Bearer token returns current user",
+    "PUT /api/users/profile updates address/bank fields",
+    "POST /api/deposits below 1L -> 400; 1L succeeds; lock_until ~180 days out",
+    "GET /api/deposits/my lists deposits",
+    "GET /api/earnings/summary today_earning ≈ principal * 0.001",
+    "GET /api/earnings/daily?days=30 returns 30 datapoints with date/earning/principal",
+    "GET /api/referrals/my returns tree with referred child",
+    "All /api/admin/* endpoints return 403 for client role",
+    "Admin: /admin/stats, /admin/clients, /admin/daily-chart, /admin/referral-tree all 200",
+    "/admin/clients/export returns application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "admin stats total_revenue reflects deposits, total_clients matches count",
+    "admin/referral-tree returns forest (array) with children arrays"
+  ],
+  "failed": [
+    {
+      "area": "GET /api/",
+      "issue": "Returns 404 Not Found instead of {service:'kanak-infosys', status:'ok'}",
+      "evidence": "Response body: {\"detail\":\"Not Found\"}. In /app/backend/server.py the @api.get('/') route is defined on line 519, AFTER app.include_router(api) on line 464, so the route is never registered on the FastAPI app.",
+      "priority": "LOW"
+    }
+  ],
+  "action_items": [
+    "Move the @api.get('/') health route definition ABOVE app.include_router(api) (or add app.include_router(api) again after it). Simplest fix: move the root() handler up near the other @api routes."
+  ],
+  "success_rate": {"backend": "97%", "frontend": "not tested"},
+  "retest_needed": false,
+  "full_testing_deferred": true
+}
