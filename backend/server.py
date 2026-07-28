@@ -96,7 +96,7 @@ def serialize_user(u: dict) -> dict:
         "aadhaar_back": u.get("aadhaar_back", ""),
         "pan_front": u.get("pan_front", ""),
         "pan_back": u.get("pan_back", ""),
-        "kyc_status": u.get("kyc_status", "pending"),
+        "kyc_status": u.get("kyc_status", "not_started"),
         "dob": u.get("dob", ""),
         "city": u.get("city", ""),
         "state": u.get("state", ""),
@@ -426,6 +426,7 @@ async def register(payload: RegisterIn, response: Response):
         "account_holder": "",
         "account_number": "",
         "ifsc": "",
+        "kyc_status": "not_started",
         "email_verified": True,
         "mobile_verified": True,
         "created_at": datetime.now(timezone.utc),
@@ -1166,7 +1167,7 @@ async def admin_clients(admin: dict = Depends(require_admin)):
         item["principal"] = earn["principal"]
         item["total_earned"] = earn["total_earned"]
         item["today_earning"] = earn["today_earning"]
-        item["kyc_status"] = u.get("kyc_status", "pending")
+        item["kyc_status"] = u.get("kyc_status", "not_started")
         item["referral_count"] = earn["referral_count"]
         out.append(item)
     return out
@@ -1227,7 +1228,7 @@ async def download_monthly_payout_report(
         name = c.get("name", "—")
         email = c.get("email", "—")
         phone = c.get("phone") or c.get("company_sms") or c.get("company_whatsapp") or "—"
-        kyc_status = c.get("kyc_status", "pending")
+        kyc_status = c.get("kyc_status", "not_started")
 
         # Balances
         balances = await compute_user_balances(c["_id"])
@@ -1566,7 +1567,7 @@ async def referrals_summary(user: dict = Depends(get_current_user)):
             "name": d["name"],
             "email": d["email"],
             "principal": p,
-            "kyc_status": d.get("kyc_status", "pending"),
+            "kyc_status": d.get("kyc_status", "not_started"),
             "joined_at": d["created_at"].isoformat() if d.get("created_at") else None,
         })
         
