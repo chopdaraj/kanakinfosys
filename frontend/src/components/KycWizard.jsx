@@ -2,23 +2,15 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { Upload, ChevronRight, Check } from "lucide-react";
+import { ChevronRight, Check } from "lucide-react";
 
 export default function KycWizard({ onComplete }) {
   const { user, refreshUser } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  // Form State (Only fields required for 3-step KYC)
+  // Form State (Only PAN and Aadhaar fields)
   const [formData, setFormData] = useState({
-    name: user?.name || "",
-    dob: user?.dob || "",
-    address_line1: user?.address_line1 || "",
-    address_line2: user?.address_line2 || "",
-    city: user?.city || "",
-    state: user?.state || "",
-    pincode: user?.pincode || "",
-    
     pan_number: user?.pan_number || "",
     pan_front: user?.pan_front || "",
     
@@ -28,9 +20,8 @@ export default function KycWizard({ onComplete }) {
   });
 
   const steps = [
-    { id: 1, name: "Personal Details", desc: "Basic identity information" },
-    { id: 2, name: "PAN Card", desc: "Permanent Account Number verification" },
-    { id: 3, name: "Aadhaar Card", desc: "National Identity card verification" },
+    { id: 1, name: "PAN Card", desc: "Permanent Account Number verification" },
+    { id: 2, name: "Aadhaar Card", desc: "National Identity card verification" },
   ];
 
   const handleInputChange = (e) => {
@@ -62,14 +53,6 @@ export default function KycWizard({ onComplete }) {
 
   const validateStep = () => {
     if (currentStep === 1) {
-      if (!formData.name.trim()) return "Full Name is required";
-      if (!formData.dob.trim()) return "Date of Birth is required";
-      if (!formData.address_line1.trim()) return "Address is required";
-      if (!formData.city.trim()) return "City is required";
-      if (!formData.state.trim()) return "State is required";
-      if (!formData.pincode.trim()) return "Pincode is required";
-    }
-    if (currentStep === 2) {
       if (!formData.pan_number.trim()) return "PAN Number is required";
       const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
       if (!panRegex.test(formData.pan_number.toUpperCase().trim())) {
@@ -77,7 +60,7 @@ export default function KycWizard({ onComplete }) {
       }
       if (!formData.pan_front) return "PAN card photo is required";
     }
-    if (currentStep === 3) {
+    if (currentStep === 2) {
       if (!formData.aadhaar_number.trim()) return "Aadhaar Number is required";
       if (formData.aadhaar_number.replace(/\s/g, "").length !== 12) {
         return "Aadhaar number must be exactly 12 digits";
@@ -94,7 +77,7 @@ export default function KycWizard({ onComplete }) {
       toast.error(error);
       return;
     }
-    if (currentStep < 3) {
+    if (currentStep < 2) {
       setCurrentStep((prev) => prev + 1);
     } else {
       submitKyc();
@@ -111,13 +94,6 @@ export default function KycWizard({ onComplete }) {
     setLoading(true);
     try {
       const updatePayload = {
-        name: formData.name,
-        dob: formData.dob,
-        address_line1: formData.address_line1,
-        address_line2: formData.address_line2,
-        city: formData.city,
-        state: formData.state,
-        pincode: formData.pincode,
         pan_number: formData.pan_number.toUpperCase().trim(),
         pan_front: formData.pan_front,
         aadhaar_number: formData.aadhaar_number.trim(),
@@ -138,14 +114,14 @@ export default function KycWizard({ onComplete }) {
     }
   };
 
-  const progressPercent = Math.round(((currentStep - 1) / 2) * 100);
+  const progressPercent = currentStep === 1 ? 50 : 100;
 
   return (
     <div className="kanak-card p-6 md:p-8 max-w-3xl mx-auto shadow-sm border border-slate-100 bg-white text-slate-800 animate-fade-in-up">
       {/* Title */}
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-slate-800 mb-2">KYC Verification Center</h2>
-        <p className="text-slate-500 text-sm">Please complete all 3 steps to verify your account and enable platform deposits.</p>
+        <p className="text-slate-500 text-sm">Please complete all 2 steps to verify your account and enable platform deposits.</p>
       </div>
 
       {/* Steps Visual indicator */}
@@ -159,7 +135,7 @@ export default function KycWizard({ onComplete }) {
         </div>
 
         {/* Step circles */}
-        <div className="grid grid-cols-3 gap-2 text-center">
+        <div className="grid grid-cols-2 gap-2 text-center">
           {steps.map((s) => {
             const isCompleted = s.id < currentStep;
             const isActive = s.id === currentStep;
@@ -187,100 +163,10 @@ export default function KycWizard({ onComplete }) {
 
       {/* Step Contents */}
       <div className="min-h-[280px] bg-slate-50/50 border border-slate-100 rounded-xl p-6 mb-8">
-        {/* STEP 1: Personal Info */}
+        {/* STEP 1: PAN Card */}
         {currentStep === 1 && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-slate-800 mb-2">Step 1: Personal Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Full Name (As in ID)</label>
-                <input 
-                  type="text" 
-                  name="name" 
-                  value={formData.name} 
-                  onChange={handleInputChange} 
-                  placeholder="Enter full name" 
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all text-sm font-medium"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Date of Birth</label>
-                <input 
-                  type="date" 
-                  name="dob" 
-                  value={formData.dob} 
-                  onChange={handleInputChange} 
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all text-sm font-medium"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Address Line 1</label>
-                <input 
-                  type="text" 
-                  name="address_line1" 
-                  value={formData.address_line1} 
-                  onChange={handleInputChange} 
-                  placeholder="Street address, company name" 
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all text-sm font-medium"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Address Line 2 (Optional)</label>
-                <input 
-                  type="text" 
-                  name="address_line2" 
-                  value={formData.address_line2} 
-                  onChange={handleInputChange} 
-                  placeholder="Apartment, suite, unit" 
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all text-sm font-medium"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">City</label>
-                <input 
-                  type="text" 
-                  name="city" 
-                  value={formData.city} 
-                  onChange={handleInputChange} 
-                  placeholder="City" 
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all text-sm font-medium"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">State</label>
-                <input 
-                  type="text" 
-                  name="state" 
-                  value={formData.state} 
-                  onChange={handleInputChange} 
-                  placeholder="State" 
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all text-sm font-medium"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Pincode</label>
-                <input 
-                  type="text" 
-                  name="pincode" 
-                  value={formData.pincode} 
-                  onChange={handleInputChange} 
-                  placeholder="6 Digit PIN" 
-                  maxLength={6}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all text-sm font-medium"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 2: PAN Card */}
-        {currentStep === 2 && (
-          <div className="space-y-5">
-            <h3 className="text-lg font-semibold text-slate-800 mb-2">Step 2: PAN Verification</h3>
+          <div className="space-y-5 animate-fade-in">
+            <h3 className="text-lg font-semibold text-slate-800 mb-2">Step 1: PAN Verification</h3>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">PAN Card Number</label>
               <input 
@@ -320,10 +206,10 @@ export default function KycWizard({ onComplete }) {
           </div>
         )}
 
-        {/* STEP 3: Aadhaar Card */}
-        {currentStep === 3 && (
-          <div className="space-y-5">
-            <h3 className="text-lg font-semibold text-slate-800 mb-2">Step 3: Aadhaar Card Verification</h3>
+        {/* STEP 2: Aadhaar Card */}
+        {currentStep === 2 && (
+          <div className="space-y-5 animate-fade-in">
+            <h3 className="text-lg font-semibold text-slate-800 mb-2">Step 2: Aadhaar Card Verification</h3>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Aadhaar Card Number</label>
               <input 
@@ -410,7 +296,7 @@ export default function KycWizard({ onComplete }) {
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               Submitting...
             </>
-          ) : currentStep === 3 ? (
+          ) : currentStep === 2 ? (
             "Submit KYC Details"
           ) : (
             <span className="flex items-center gap-1">
