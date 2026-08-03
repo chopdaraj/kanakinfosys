@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
-import { api, formatINR, formatDate, API } from "@/lib/api";
+import { api, formatINR, formatDate, API, formatKycStatus } from "@/lib/api";
 import { toast } from "sonner";
 import { Download, Search, Trash2, Eye, ShieldCheck } from "lucide-react";
 import { useModal } from "@/context/ModalContext";
@@ -156,7 +156,8 @@ export default function AdminClients() {
                   </tr>
                 ) : (
                   filtered.map((c) => {
-                    const kyc = (c.kyc_status || "pending").toUpperCase();
+                    const rawKyc = c.kyc_status || "pending";
+                    const kyc = formatKycStatus(rawKyc).toUpperCase();
                     return (
                       <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">
                         <td className="py-4 px-3 text-xs font-mono font-bold text-slate-400">#{c.serial_number ?? "—"}</td>

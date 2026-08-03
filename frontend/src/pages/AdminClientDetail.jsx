@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
-import { api, formatINR, formatDate } from "@/lib/api";
+import { api, formatINR, formatDate, formatKycStatus } from "@/lib/api";
 import { toast } from "sonner";
 import { ArrowLeft, Coins, Landmark, User, FileText, CheckCircle2, XCircle, ShieldCheck } from "lucide-react";
 
@@ -130,7 +130,7 @@ export default function AdminClientDetail() {
             <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
               <span className="text-xs text-slate-500 font-semibold">KYC Verification:</span>
               <span className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border uppercase ${badgeClass(u.kyc_status)}`}>
-                {u.kyc_status || "pending"}
+                {formatKycStatus(u.kyc_status)}
               </span>
               <button
                 onClick={() => updateKycStatus("verified")}

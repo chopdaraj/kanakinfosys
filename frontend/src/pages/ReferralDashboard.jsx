@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ClientLayout from "@/components/ClientLayout";
-import { api, formatINR, formatDate } from "@/lib/api";
+import { api, formatINR, formatDate, formatKycStatus } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import AnimatedNumber from "@/components/AnimatedNumber";
@@ -110,7 +110,7 @@ const VisualTreeNode = ({ node, searchQuery, level = 1, isLast = false }) => {
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between"><span className="text-slate-400">Email:</span> <span className="font-semibold">{node.email}</span></div>
               <div className="flex justify-between"><span className="text-slate-400">Principal Investment:</span> <span className="font-bold text-emerald-400">{formatINR(node.principal)}</span></div>
-              <div className="flex justify-between"><span className="text-slate-400">Status Badge:</span> <span className="font-bold capitalize">{node.kyc_status || "pending"}</span></div>
+              <div className="flex justify-between"><span className="text-slate-400">Status Badge:</span> <span className="font-bold capitalize">{formatKycStatus(node.kyc_status)}</span></div>
               <div className="flex justify-between"><span className="text-slate-400">Sub-Network Count:</span> <span className="font-bold">{node.children?.length || 0} direct downlines</span></div>
             </div>
           </div>

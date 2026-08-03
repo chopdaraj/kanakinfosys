@@ -32,3 +32,14 @@ export const formatDate = (iso) => {
   const d = new Date(iso);
   return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 };
+
+export const formatKycStatus = (status) => {
+  if (!status) return "Pending";
+  const normalized = status.toLowerCase().trim();
+  if (normalized === "not_started") return "Not Started";
+  if (normalized === "kyc_veryfiction" || normalized === "kyc_verification") return "KYC Verification";
+  if (normalized === "pending") return "Pending";
+  if (normalized === "verified") return "Verified";
+  if (normalized === "rejected") return "Rejected";
+  return normalized.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+};

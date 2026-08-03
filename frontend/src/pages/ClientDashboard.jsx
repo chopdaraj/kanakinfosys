@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ClientLayout from "@/components/ClientLayout";
-import { api, formatINR, formatDate } from "@/lib/api";
+import { api, formatINR, formatDate, formatKycStatus } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import AnimatedNumber from "@/components/AnimatedNumber";
@@ -267,7 +267,6 @@ export default function ClientDashboard() {
             </p>
           </div>
 
-          {/* KYC Status banner */}
           <div className="flex items-center gap-3 bg-white/70 backdrop-blur-md p-3 rounded-2xl border border-slate-100/60 shadow-sm">
             <span className="text-xs text-slate-500 font-semibold">KYC Verification:</span>
             <span
@@ -280,7 +279,7 @@ export default function ClientDashboard() {
                   : "bg-amber-50 text-amber-700 border-amber-200"
               }`}
             >
-              {user?.kyc_status || "pending"}
+              {formatKycStatus(user?.kyc_status)}
             </span>
           </div>
         </div>
@@ -709,7 +708,7 @@ export default function ClientDashboard() {
         <div className="glass-card kanak-card p-6" data-testid="deposit-ledger">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Ledger ledger</span>
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Ledger</span>
               <h2 className="text-lg font-bold text-slate-800">Deposit History</h2>
             </div>
           </div>

@@ -399,11 +399,11 @@ async def register(payload: RegisterIn, response: Response):
 
     # Allocate unique permanent sequence numbers
     max_user = await db.users.find_one({"role": "client"}, sort=[("serial_number", -1)])
-    next_serial = (max_user["serial_number"] + 1) if max_user and "serial_number" in max_user else 1
+    next_serial = (max_user["serial_number"] + 1) if max_user and "serial_number" in max_user else 50
 
     while True:
         client_id = f"CLI{next_serial:06d}"
-        code = f"KNK{next_serial:03d}"
+        code = f"KNK{next_serial:04d}"
         if not await db.users.find_one({"$or": [{"serial_number": next_serial}, {"client_id": client_id}, {"referral_code": code}]}):
             break
         next_serial += 1
@@ -1835,7 +1835,7 @@ async def startup():
 
     # Self-healing migration for existing clients
     existing_clients = await db.users.find({"role": "client"}).sort("created_at", 1).to_list(None)
-    for idx, c in enumerate(existing_clients, start=1):
+    for idx, c in enumerate(existing_clients, start=50):
         updates = {}
         if "serial_number" not in c:
             updates["serial_number"] = idx
@@ -1846,7 +1846,7 @@ async def startup():
         # Format code check
         code_ok = False
         ref_code = c.get("referral_code", "")
-        if ref_code.startswith("KNK") and len(ref_code) == 6:
+        if ref_code.startswith("KNK") and len(ref_code) == 7:
             try:
                 int(ref_code[3:])
                 code_ok = True
@@ -1854,7 +1854,7 @@ async def startup():
                 pass
         
         if not code_ok:
-            new_code = f"KNK{serial:03d}"
+            new_code = f"KNK{serial:04d}"
             old_code = c.get("referral_code")
             updates["referral_code"] = new_code
             if old_code:
