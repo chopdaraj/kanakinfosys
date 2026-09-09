@@ -33,53 +33,73 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-[#F8F9FB] dark:bg-slate-950 text-slate-800 dark:text-slate-200 transition-colors duration-300">
-      {/* Visual side panel */}
-      <div className="hidden lg:block relative bg-[#FFF5EF]">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#FFF5EF] to-[#FFE6D5] opacity-95" />
-        <div className="relative h-full flex flex-col justify-between p-12 text-slate-800 z-10">
-          <Link to="/" data-testid="login-brand-link" className="flex items-center gap-3">
-            <div className="bg-white p-2 px-5 rounded-2xl shadow-md border border-orange-100">
-              <img src="/assets/kanak-logo.png" alt="Kanak Infosys Logo" className="h-8 w-auto object-contain" />
+    <div className="min-h-screen grid lg:grid-cols-2 bg-[#F8F9FB] text-slate-800 font-body">
+      {/* Left Visual side panel */}
+      <div className="hidden lg:flex flex-col justify-between p-12 lg:p-16 xl:p-20 bg-[#FDEEE4] relative">
+        {/* Top Logo Container */}
+        <div>
+          <Link to="/" data-testid="login-brand-link" className="inline-block">
+            <div className="bg-white p-2.5 px-6 rounded-2xl shadow-sm border border-orange-100/60 inline-flex items-center">
+              <img 
+                src="/assets/kanak-logo.png" 
+                alt="Kanak Infosys Logo" 
+                className="h-7 w-auto object-contain" 
+              />
             </div>
           </Link>
-          <div>
-            <h2 className="text-4xl font-extrabold leading-tight tracking-tight max-w-sm font-display text-slate-900">
-              Precision. <br />Discipline. <br /><span className="text-[#F26522]">Yield.</span>
-            </h2>
-            <p className="mt-4 text-slate-600 text-sm leading-relaxed max-w-sm font-medium">
-              Access your investment portfolio, daily earnings distribution, and referral network in one premium workspace.
-            </p>
-          </div>
-          <div className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">
-            Kanak Infosys · Private Terminal
-          </div>
+        </div>
+
+        {/* Middle Typography */}
+        <div className="my-auto py-12">
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-[1.15] font-display">
+            Precision. <br />
+            Discipline. <br />
+            <span className="text-[#E8590C]">Yield.</span>
+          </h1>
+          <p className="mt-6 text-slate-500 text-sm leading-relaxed max-w-sm font-medium">
+            Access your investment portfolio, daily earnings distribution, and referral network in one premium workspace.
+          </p>
+        </div>
+
+        {/* Bottom Terminal Label */}
+        <div className="text-[11px] text-slate-400 font-semibold tracking-widest uppercase">
+          KANAK INFOSYS · PRIVATE TERMINAL
         </div>
       </div>
 
-      {/* Access Form */}
-      <div className="flex items-center justify-center p-6 sm:p-12">
-        <div className="w-full max-w-md bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-100/50 dark:shadow-black/20 animate-fade-in-up transition-colors">
+      {/* Right Access Form Panel */}
+      <div className="flex items-center justify-center p-6 sm:p-12 lg:p-16">
+        <div className="w-full max-w-[440px] bg-white p-8 sm:p-12 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/50">
           <form onSubmit={onSubmit} data-testid="login-form" className="space-y-6">
+            {/* Mobile-only logo */}
             <div className="lg:hidden mb-6 flex justify-center">
               <Link to="/" className="inline-block bg-white p-2 px-5 rounded-2xl shadow-sm border border-slate-100">
-                <img src="/assets/kanak-logo.png" alt="Kanak Infosys" className="h-8 w-auto object-contain" />
+                <img src="/assets/kanak-logo.png" alt="Kanak Infosys" className="h-7 w-auto object-contain" />
               </Link>
             </div>
+
+            {/* Header */}
             <div>
-              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">Client Access</span>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-display">Sign In</h1>
-              <p className="text-xs text-slate-500 mt-2">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
+                CLIENT ACCESS
+              </span>
+              <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight font-display">
+                Sign In
+              </h2>
+              <p className="text-xs text-slate-500 mt-2 font-medium">
                 New to the platform?{" "}
-                <Link to="/register" data-testid="login-register-link" className="text-[#F26522] font-bold hover:underline">
+                <Link to="/register" data-testid="login-register-link" className="text-[#E8590C] font-bold hover:underline">
                   Create an account
                 </Link>
               </p>
             </div>
 
-            <div className="space-y-4 pt-2">
+            {/* Inputs */}
+            <div className="space-y-5 pt-2">
               <div>
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-450 block mb-1.5">Email Address</label>
+                <label className="text-xs font-semibold text-slate-600 block mb-2">
+                  Email Address
+                </label>
                 <input
                   type="email"
                   required
@@ -87,14 +107,22 @@ export default function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   data-testid="login-email-input"
                   placeholder="you@company.com"
-                  className="w-full border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]/20 focus:border-[#F26522] font-medium placeholder:text-slate-300 dark:placeholder:text-slate-650 bg-white dark:bg-slate-950 dark:text-white"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#E8590C]/20 focus:border-[#E8590C] font-normal placeholder:text-slate-300 text-slate-800 bg-white transition"
                 />
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-450 block">Password</label>
-                  <button type="button" onClick={() => toast.info("Password recovery structure is mock-ready.")} className="text-[10px] text-[#F26522] font-bold hover:underline">Forgot password?</button>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-semibold text-slate-600 block">
+                    Password
+                  </label>
+                  <button 
+                    type="button" 
+                    onClick={() => toast.info("Password recovery structure is mock-ready.")} 
+                    className="text-xs text-[#E8590C] font-semibold hover:underline"
+                  >
+                    Forgot password?
+                  </button>
                 </div>
                 <input
                   type="password"
@@ -103,17 +131,18 @@ export default function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   data-testid="login-password-input"
                   placeholder="••••••••"
-                  className="w-full border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]/20 focus:border-[#F26522] font-medium placeholder:text-slate-300 dark:placeholder:text-slate-650 bg-white dark:bg-slate-950 dark:text-white"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#E8590C]/20 focus:border-[#E8590C] font-normal placeholder:text-slate-300 text-slate-800 bg-white transition"
                 />
               </div>
             </div>
 
+            {/* Submit Button */}
             <div className="pt-2">
               <button
                 type="submit"
                 disabled={loading}
                 data-testid="login-submit-button"
-                className="w-full py-3.5 text-sm font-semibold text-white kanak-gradient-btn"
+                className="w-full py-3.5 px-4 bg-[#E8590C] hover:bg-[#D9480F] text-white rounded-xl text-sm font-bold shadow-md shadow-orange-500/20 active:scale-[0.99] transition-all disabled:opacity-70"
               >
                 {loading ? "Signing in..." : "Sign in to Terminal"}
               </button>
