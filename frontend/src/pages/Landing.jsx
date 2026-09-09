@@ -84,12 +84,12 @@ export default function Landing() {
               </div>
             </div>
 
-            <div className="lg:col-span-5">
-              <div className="aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3] rounded-3xl bg-slate-900 border border-slate-100 dark:border-slate-800 overflow-hidden relative shadow-2xl shadow-slate-200/60 dark:shadow-black/40">
+            <div className="lg:col-span-5 flex justify-center lg:justify-end">
+              <div className="relative max-w-md w-full rounded-3xl overflow-hidden shadow-2xl shadow-orange-500/10 hover:shadow-orange-500/20 transition-all duration-300">
                 <img
-                  src="https://images.pexels.com/photos/6203470/pexels-photo-6203470.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=600"
-                  alt="Quantitative Financial Analytics"
-                  className="w-full h-full object-cover opacity-95"
+                  src="/assets/kanak-hero.png"
+                  alt="Kanak Infosys Yield Growth"
+                  className="w-full h-auto object-contain rounded-3xl"
                 />
               </div>
             </div>
