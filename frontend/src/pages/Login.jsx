@@ -33,26 +33,25 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-[#F7F9FC]">
+    <div className="min-h-screen grid lg:grid-cols-2 bg-[#F8F9FB] dark:bg-slate-950 text-slate-800 dark:text-slate-200 transition-colors duration-300">
       {/* Visual side panel */}
-      <div className="hidden lg:block relative bg-slate-900">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#002FA7] to-indigo-950 opacity-95" />
-        <div className="relative h-full flex flex-col justify-between p-12 text-white z-10">
+      <div className="hidden lg:block relative bg-[#FFF5EF]">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#FFF5EF] to-[#FFE6D5] opacity-95" />
+        <div className="relative h-full flex flex-col justify-between p-12 text-slate-800 z-10">
           <Link to="/" data-testid="login-brand-link" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md">
-              <span className="text-white font-bold text-xl">K</span>
+            <div className="bg-white p-2 px-5 rounded-2xl shadow-md border border-orange-100">
+              <img src="/assets/kanak-logo.png" alt="Kanak Infosys Logo" className="h-8 w-auto object-contain" />
             </div>
-            <div className="font-bold text-lg tracking-wider">KANAK INFOSYS</div>
           </Link>
           <div>
-            <h2 className="text-4xl font-bold leading-tight tracking-tight max-w-sm">
-              Precision. Discipline. Yield.
+            <h2 className="text-4xl font-extrabold leading-tight tracking-tight max-w-sm font-display text-slate-900">
+              Precision. <br />Discipline. <br /><span className="text-[#F26522]">Yield.</span>
             </h2>
-            <p className="mt-4 text-blue-100/70 text-sm leading-relaxed max-w-sm">
+            <p className="mt-4 text-slate-600 text-sm leading-relaxed max-w-sm font-medium">
               Access your investment portfolio, daily earnings distribution, and referral network in one premium workspace.
             </p>
           </div>
-          <div className="text-[10px] text-blue-200/50 font-bold tracking-widest uppercase">
+          <div className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">
             Kanak Infosys · Private Terminal
           </div>
         </div>
@@ -60,14 +59,19 @@ export default function Login() {
 
       {/* Access Form */}
       <div className="flex items-center justify-center p-6 sm:p-12">
-        <div className="w-full max-w-md bg-white p-8 sm:p-10 rounded-3xl border border-slate-100 shadow-xl shadow-slate-100/50 animate-fade-in-up">
+        <div className="w-full max-w-md bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-100/50 dark:shadow-black/20 animate-fade-in-up transition-colors">
           <form onSubmit={onSubmit} data-testid="login-form" className="space-y-6">
+            <div className="lg:hidden mb-6 flex justify-center">
+              <Link to="/" className="inline-block bg-white p-2 px-5 rounded-2xl shadow-sm border border-slate-100">
+                <img src="/assets/kanak-logo.png" alt="Kanak Infosys" className="h-8 w-auto object-contain" />
+              </Link>
+            </div>
             <div>
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block mb-1">Client Access</span>
-              <h1 className="text-2xl font-bold text-slate-900">Sign In</h1>
+              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">Client Access</span>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-display">Sign In</h1>
               <p className="text-xs text-slate-500 mt-2">
                 New to the platform?{" "}
-                <Link to="/register" data-testid="login-register-link" className="text-blue-700 font-bold hover:underline">
+                <Link to="/register" data-testid="login-register-link" className="text-[#F26522] font-bold hover:underline">
                   Create an account
                 </Link>
               </p>
@@ -75,7 +79,7 @@ export default function Login() {
 
             <div className="space-y-4 pt-2">
               <div>
-                <label className="text-xs font-semibold text-slate-500 block mb-1.5">Email Address</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-450 block mb-1.5">Email Address</label>
                 <input
                   type="email"
                   required
@@ -83,14 +87,14 @@ export default function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   data-testid="login-email-input"
                   placeholder="you@company.com"
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 font-medium placeholder:text-slate-300"
+                  className="w-full border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]/20 focus:border-[#F26522] font-medium placeholder:text-slate-300 dark:placeholder:text-slate-650 bg-white dark:bg-slate-950 dark:text-white"
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-semibold text-slate-500 block">Password</label>
-                  <button type="button" onClick={() => toast.info("Password recovery structure is mock-ready.")} className="text-[10px] text-blue-700 font-bold hover:underline">Forgot password?</button>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-450 block">Password</label>
+                  <button type="button" onClick={() => toast.info("Password recovery structure is mock-ready.")} className="text-[10px] text-[#F26522] font-bold hover:underline">Forgot password?</button>
                 </div>
                 <input
                   type="password"
@@ -99,7 +103,7 @@ export default function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   data-testid="login-password-input"
                   placeholder="••••••••"
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 font-medium placeholder:text-slate-300"
+                  className="w-full border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]/20 focus:border-[#F26522] font-medium placeholder:text-slate-300 dark:placeholder:text-slate-650 bg-white dark:bg-slate-950 dark:text-white"
                 />
               </div>
             </div>

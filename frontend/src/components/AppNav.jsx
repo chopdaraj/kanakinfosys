@@ -37,11 +37,8 @@ export default function AppNav() {
     <header className="border-b border-slate-200 bg-white sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link to={isAdmin ? "/admin" : "/dashboard"} className="flex items-center gap-3" data-testid="nav-brand">
-            <img src="/assets/kanak-logo.png" alt="Kanak Infosys" className="h-10 w-10 object-contain" />
-            <div className="font-display font-bold text-lg tracking-tight leading-none">
-              KANAK<span className="text-[#002FA7]"> INFOSYS</span>
-            </div>
+          <Link to={isAdmin ? "/admin" : "/dashboard"} className="flex items-center" data-testid="nav-brand">
+            <img src="/assets/kanak-logo.png" alt="Kanak Infosys" className="h-9 w-auto object-contain hover:opacity-90 transition-opacity" />
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">

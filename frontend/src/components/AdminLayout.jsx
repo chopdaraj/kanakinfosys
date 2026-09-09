@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,7 +14,9 @@ import {
   ChevronDown,
   Menu,
   X,
-  Settings
+  Settings,
+  Sun,
+  Moon
 } from "lucide-react";
 import { toast } from "sonner";
 import { useModal } from "@/context/ModalContext";
@@ -25,6 +27,11 @@ export default function AdminLayout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  
+  useEffect(() => {
+    document.documentElement.classList.remove("dark");
+    localStorage.setItem("theme", "light");
+  }, []);
 
   const handleLogout = async () => {
     const yes = await modal.confirm(
@@ -49,18 +56,14 @@ export default function AdminLayout({ children }) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC] text-slate-800 flex flex-col lg:flex-row pb-20 lg:pb-0">
+    <div className="min-h-screen bg-[#F8F9FB] dark:bg-slate-950 text-slate-800 dark:text-slate-200 flex flex-col lg:flex-row pb-20 lg:pb-0 font-body transition-colors duration-300">
       {/* Sidebar - Desktop */}
-      <aside className="w-[280px] bg-white/75 backdrop-blur-md border-r border-slate-100 flex-col shrink-0 hidden lg:flex sticky top-0 h-screen z-20 shadow-sm shadow-blue-500/5">
+      <aside className="w-[280px] bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800/80 flex-col shrink-0 hidden lg:flex sticky top-0 h-screen z-20 shadow-sm shadow-orange-500/5 transition-colors">
         {/* Brand Logo */}
-        <div className="h-20 flex items-center gap-3 px-6 border-b border-slate-50">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/10 hover:scale-105 transition duration-300">
-            <span className="text-white font-bold text-xl">K</span>
-          </div>
-          <div>
-            <div className="font-bold text-base leading-none text-slate-900 tracking-tight">KANAK</div>
-            <div className="text-[10px] text-slate-400 font-semibold tracking-wider">INFOSYS</div>
-          </div>
+        <div className="h-20 flex items-center px-6 border-b border-slate-50 dark:border-slate-800/40">
+          <Link to="/admin" className="flex items-center">
+            <img src="/assets/kanak-logo.png" alt="Kanak Infosys Logo" className="h-10 w-auto object-contain hover:scale-105 transition duration-300" />
+          </Link>
         </div>
 
         {/* Navigation Items */}
@@ -72,18 +75,18 @@ export default function AdminLayout({ children }) {
               <Link
                 key={item.label}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 relative overflow-hidden group ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 relative overflow-hidden group ${
                   isActive
-                    ? "bg-gradient-to-r from-blue-50/70 to-indigo-50/20 text-blue-700 font-semibold shadow-sm"
-                    : "text-slate-500 hover:bg-slate-50/50 hover:text-slate-800"
+                    ? "bg-orange-50/50 dark:bg-orange-950/20 text-[#F26522] shadow-sm"
+                    : "text-slate-500 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 hover:text-slate-800 dark:hover:text-slate-200"
                 }`}
               >
-                <Icon className={`w-4 h-4 transition-transform duration-300 group-hover:scale-110 ${isActive ? "text-blue-700" : "text-slate-400"}`} />
+                <Icon className={`w-4 h-4 transition-transform duration-300 group-hover:scale-110 ${isActive ? "text-[#F26522]" : "text-slate-400"}`} />
                 {item.label}
                 {isActive && (
                   <motion.div
                     layoutId="adminActiveIndicator"
-                    className="absolute left-0 top-0 bottom-0 w-1 bg-blue-700 rounded-r-full"
+                    className="absolute left-0 top-0 bottom-0 w-1 bg-[#F26522] rounded-r-full"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
                 )}
@@ -93,19 +96,19 @@ export default function AdminLayout({ children }) {
         </nav>
 
         {/* User Card */}
-        <div className="p-4 border-t border-slate-50 flex items-center justify-between gap-3">
+        <div className="p-4 border-t border-slate-50 dark:border-slate-800/40 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-700 uppercase">
+            <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-500/10 flex items-center justify-center font-bold text-[#F26522] uppercase">
               A
             </div>
             <div className="truncate max-w-[120px]">
-              <div className="text-sm font-semibold text-slate-800 truncate">Kanak Admin</div>
-              <div className="text-[10px] text-slate-400 font-medium capitalize">Administrator</div>
+              <div className="text-sm font-semibold text-slate-800 dark:text-white truncate">Kanak Admin</div>
+              <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium capitalize">Administrator</div>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="p-2 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-50 transition-colors"
+            className="p-2 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             title="Logout"
           >
             <LogOut className="w-4 h-4" />
@@ -116,37 +119,39 @@ export default function AdminLayout({ children }) {
       {/* Main Panel */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         {/* Navbar */}
-        <header className="h-20 bg-white/75 backdrop-blur-md border-b border-slate-100/60 sticky top-0 z-30 flex items-center px-4 sm:px-8 justify-between gap-4">
+        <header className="h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-100/60 dark:border-slate-800/60 sticky top-0 z-30 flex items-center px-4 sm:px-8 justify-between gap-4 transition-colors">
           <div className="flex items-center gap-3 flex-1">
             <button
               onClick={() => setMobileOpen(true)}
-              className="p-2 border border-slate-100 hover:bg-slate-50 rounded-xl lg:hidden text-slate-600 transition"
+              className="p-2 border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl lg:hidden text-slate-600 dark:text-slate-450 transition"
             >
               <Menu className="w-5 h-5" />
             </button>
             <div className="hidden sm:block">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Kanak Admin</span>
-              <h2 className="text-lg font-bold text-slate-800 leading-none mt-1">Management Terminal</h2>
+              <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Kanak Admin</span>
+              <h2 className="text-lg font-bold text-slate-800 dark:text-white leading-none mt-1">Management Terminal</h2>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
+
+
             {/* Notification Bell */}
-            <button className="p-2.5 border border-slate-100 hover:bg-slate-50 rounded-xl relative text-slate-600">
+            <button className="p-2.5 border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl relative text-slate-600 dark:text-slate-400">
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-slate-900" />
             </button>
 
             {/* Admin Profile Dropdown */}
-            <div className="flex items-center gap-3 pl-3 border-l border-slate-100">
-              <div className="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center font-bold shadow-md shadow-blue-700/10">
+            <div className="flex items-center gap-3 pl-3 border-l border-slate-100 dark:border-slate-800">
+              <div className="w-10 h-10 rounded-full bg-[#F26522] text-white flex items-center justify-center font-bold shadow-md shadow-orange-500/10">
                 KA
               </div>
               <div className="hidden sm:block text-left">
-                <div className="text-sm font-semibold text-slate-800 leading-none">Kanak Admin</div>
-                <div className="text-[10px] text-slate-400 font-medium mt-1">Administrator</div>
+                <div className="text-sm font-semibold text-slate-800 dark:text-white leading-none">Kanak Admin</div>
+                <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-1">Administrator</div>
               </div>
-              <ChevronDown className="w-4 h-4 text-slate-400 cursor-pointer" />
+              <ChevronDown className="w-4 h-4 text-slate-400" />
             </div>
           </div>
         </header>
@@ -177,23 +182,17 @@ export default function AdminLayout({ children }) {
 
       {/* Mobile Drawer */}
       <div
-        className={`fixed top-0 bottom-0 left-0 w-[280px] bg-white z-50 shadow-xl border-r border-slate-100 flex flex-col transform transition-transform duration-300 lg:hidden ${
+        className={`fixed top-0 bottom-0 left-0 w-[280px] bg-white dark:bg-slate-900 z-50 shadow-xl border-r border-slate-100 dark:border-slate-800 flex flex-col transform transition-transform duration-300 lg:hidden ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="h-20 flex items-center justify-between px-6 border-b border-slate-50">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/10">
-              <span className="text-white font-bold text-xl">K</span>
-            </div>
-            <div>
-              <div className="font-bold text-base leading-none text-slate-900 tracking-tight">KANAK</div>
-              <div className="text-[10px] text-slate-400 font-semibold tracking-wider">INFOSYS</div>
-            </div>
-          </div>
+        <div className="h-20 flex items-center justify-between px-6 border-b border-slate-50 dark:border-slate-800/40">
+          <Link to="/admin" onClick={() => setMobileOpen(false)} className="flex items-center">
+            <img src="/assets/kanak-logo.png" alt="Kanak Infosys Logo" className="h-10 w-auto object-contain" />
+          </Link>
           <button
             onClick={() => setMobileOpen(false)}
-            className="p-2 border border-slate-100 hover:bg-slate-50 rounded-xl text-slate-500"
+            className="p-2 border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-850 rounded-xl text-slate-500"
           >
             <X className="w-5 h-5" />
           </button>
@@ -208,13 +207,13 @@ export default function AdminLayout({ children }) {
                 key={item.label}
                 to={item.path}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-250 ${
                   isActive
-                    ? "bg-gradient-to-r from-blue-50 to-indigo-50/30 text-blue-700 font-semibold"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                    ? "bg-orange-50 dark:bg-orange-950/20 text-[#F26522]"
+                    : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/30 hover:text-slate-800 dark:hover:text-slate-200"
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? "text-blue-700" : "text-slate-400"}`} />
+                <Icon className={`w-4 h-4 ${isActive ? "text-[#F26522]" : "text-slate-400"}`} />
                 {item.label}
               </Link>
             );
@@ -222,19 +221,19 @@ export default function AdminLayout({ children }) {
         </nav>
 
         {/* User Card Mobile */}
-        <div className="p-4 border-t border-slate-50 flex items-center justify-between gap-3">
+        <div className="p-4 border-t border-slate-50 dark:border-slate-800/40 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-700 uppercase">
+            <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-500/10 flex items-center justify-center font-bold text-[#F26522] uppercase">
               A
             </div>
             <div className="truncate max-w-[120px]">
-              <div className="text-sm font-semibold text-slate-800 truncate">Kanak Admin</div>
-              <div className="text-[10px] text-slate-400 font-medium capitalize">Administrator</div>
+              <div className="text-sm font-semibold text-slate-800 dark:text-white truncate">Kanak Admin</div>
+              <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium capitalize">Administrator</div>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="p-2 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-50 transition-colors"
+            className="p-2 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
           >
             <LogOut className="w-4 h-4" />
           </button>
@@ -242,7 +241,7 @@ export default function AdminLayout({ children }) {
       </div>
 
       {/* Mobile Sticky Bottom Navigation Menu Bar for Admin */}
-      <div className="fixed bottom-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-md border-t border-slate-100 flex items-center justify-around z-40 lg:hidden shadow-[0_-4px_20px_rgba(0,47,167,0.03)] px-2">
+      <div className="fixed bottom-0 left-0 right-0 h-16 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-100 dark:border-slate-800 flex items-center justify-around z-40 lg:hidden shadow-[0_-4px_20px_rgba(242,101,34,0.03)] px-2">
         {adminMenuItems.slice(0, 5).map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
@@ -251,10 +250,10 @@ export default function AdminLayout({ children }) {
               key={item.label}
               to={item.path}
               className={`flex flex-col items-center justify-center gap-1 flex-1 py-1 rounded-xl transition-all duration-300 ${
-                isActive ? "text-blue-700" : "text-slate-400"
+                isActive ? "text-[#F26522]" : "text-slate-400"
               }`}
             >
-              <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? "scale-110 text-blue-700" : ""}`} />
+              <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? "scale-110 text-[#F26522]" : ""}`} />
               <span className="text-[9px] font-bold tracking-wide">{item.label}</span>
             </Link>
           );

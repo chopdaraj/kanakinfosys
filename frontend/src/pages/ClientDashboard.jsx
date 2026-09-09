@@ -38,14 +38,14 @@ import {
 const MetricCard = ({ label, value, icon: Icon, sub, colorClass, testId }) => (
   <div className="glass-card kanak-card kanak-card-hover p-6 flex flex-col justify-between h-36" data-testid={testId}>
     <div className="flex items-start justify-between">
-      <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</span>
-      <div className={`p-2.5 rounded-xl ${colorClass || "bg-blue-50 text-blue-600"} transition-transform duration-300 hover:scale-110`}>
+      <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{label}</span>
+      <div className={`p-2.5 rounded-xl ${colorClass || "bg-orange-50 text-orange-600"} transition-transform duration-300 hover:scale-110`}>
         <Icon className="w-4 h-4" />
       </div>
     </div>
     <div>
-      <div className="text-2xl font-bold text-slate-800 mt-2">{value}</div>
-      {sub && <div className="text-[10px] font-medium text-slate-400 mt-1">{sub}</div>}
+      <div className="text-2xl font-bold text-slate-800 dark:text-white mt-2">{value}</div>
+      {sub && <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-1">{sub}</div>}
     </div>
   </div>
 );
@@ -285,13 +285,13 @@ export default function ClientDashboard() {
         </div>
 
         {/* 9 Metric Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-fade-in-up">
           <MetricCard
             label="Total Principal"
             value={<AnimatedNumber value={summary?.principal || 0} prefix="₹" />}
             icon={Wallet}
             sub="Active invested capital"
-            colorClass="bg-blue-50 text-blue-700"
+            colorClass="bg-orange-50 dark:bg-orange-950/20 text-[#F26522] dark:text-orange-400"
             testId="metric-principal"
           />
           <MetricCard
@@ -299,7 +299,7 @@ export default function ClientDashboard() {
             value={<AnimatedNumber value={summary?.total_earned || 0} prefix="₹" />}
             icon={TrendingUp}
             sub="Profits + commissions"
-            colorClass="bg-indigo-50 text-indigo-700"
+            colorClass="bg-teal-50 dark:bg-teal-950/20 text-[#4FAF9F] dark:text-teal-400"
             testId="metric-total-earned"
           />
           <MetricCard
@@ -307,7 +307,7 @@ export default function ClientDashboard() {
             value={<AnimatedNumber value={summary?.monthly_credits || 0} prefix="₹" />}
             icon={Coins}
             sub="Current calendar month"
-            colorClass="bg-emerald-50 text-emerald-700"
+            colorClass="bg-cyan-50 dark:bg-cyan-950/20 text-[#35A9B5] dark:text-cyan-400"
             testId="metric-today-earning"
           />
           <MetricCard
@@ -315,7 +315,7 @@ export default function ClientDashboard() {
             value={summary?.lock_period || "6 Months"}
             icon={Lock}
             sub="Deposited lock-in duration"
-            colorClass="bg-purple-50 text-purple-700"
+            colorClass="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
             testId="metric-lock"
           />
           <MetricCard
@@ -323,7 +323,7 @@ export default function ClientDashboard() {
             value={<AnimatedNumber value={summary?.total_referral_earned || 0} prefix="₹" />}
             icon={Users}
             sub="Commissions from direct network"
-            colorClass="bg-sky-50 text-sky-700"
+            colorClass="bg-orange-50 dark:bg-orange-950/20 text-[#F26522] dark:text-orange-400"
             testId="metric-ref-earnings"
           />
           <MetricCard
@@ -331,7 +331,7 @@ export default function ClientDashboard() {
             value={<AnimatedNumber value={summary?.referral_count || 0} />}
             icon={Users}
             sub="Direct referred partners"
-            colorClass="bg-orange-50 text-orange-700"
+            colorClass="bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400"
             testId="metric-ref-count"
           />
           <MetricCard
@@ -339,7 +339,7 @@ export default function ClientDashboard() {
             value={<AnimatedNumber value={summary?.total_withdrawn || 0} prefix="₹" />}
             icon={ArrowUpRight}
             sub="Capital successfully cashed out"
-            colorClass="bg-rose-50 text-rose-700"
+            colorClass="bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400"
             testId="metric-withdrawn"
           />
           <MetricCard
@@ -347,7 +347,7 @@ export default function ClientDashboard() {
             value={<AnimatedNumber value={summary?.pending_withdrawals || 0} prefix="₹" />}
             icon={Clock}
             sub="Under admin review"
-            colorClass="bg-amber-50 text-amber-700"
+            colorClass="bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400"
             testId="metric-pending-withdrawals"
           />
           <MetricCard
@@ -355,7 +355,7 @@ export default function ClientDashboard() {
             value={<AnimatedNumber value={summary?.pending_deposits || 0} prefix="₹" />}
             icon={Clock}
             sub="Awaiting bank clearance"
-            colorClass="bg-slate-100 text-slate-600"
+            colorClass="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
             testId="metric-pending-deposits"
           />
         </div>

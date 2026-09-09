@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,57 +6,40 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%; /* #F7F9FC */
-    --foreground: 222.2 84% 4.9%;
+    --background: 218 33% 98%; /* #F8F9FB */
+    --foreground: 222 43% 16%; /* #17213A */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 222 43% 16%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 18px;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --popover-foreground: 222 43% 16%;
+    --primary: 18 90% 54%; /* #F26522 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 216 20% 93%; /* #E8EBF0 */
+    --secondary-foreground: 222 43% 16%;
+    --muted: 218 33% 96%;
+    --muted-foreground: 220 9% 46%; /* #667085 */
+    --accent: 18 90% 96%;
+    --accent-foreground: 18 90% 54%;
+    --border: 216 20% 93%;
+    --input: 216 20% 93%;
+    --ring: 18 90% 54%;
+    --radius: 20px;
   }
 }
 
 body {
   margin: 0;
-  font-family: 'Poppins', 'Inter', -apple-system, sans-serif;
-  background-color: #F7F9FC;
+  font-family: 'Inter', -apple-system, sans-serif;
+  background-color: #F8F9FB;
+  color: #17213A;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography styles */
+.font-display {
+  font-family: 'Manrope', 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: -0.02em;
 }
 
 /* Premium Layout & Components */
@@ -69,16 +52,16 @@ body {
 
 .kanak-card {
   background-color: #ffffff;
-  border: 1px solid rgba(241, 245, 249, 0.9);
-  border-radius: 18px;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.03), 0 2px 8px -1px rgba(15, 23, 42, 0.02);
+  border: 1px solid #E8EBF0;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px -2px rgba(17, 27, 53, 0.02), 0 2px 8px -1px rgba(17, 27, 53, 0.01);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .kanak-card-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
-  border-color: rgba(226, 232, 240, 0.8);
+  box-shadow: 0 12px 30px -4px rgba(17, 27, 53, 0.05), 0 4px 12px -2px rgba(17, 27, 53, 0.02);
+  border-color: #F26522;
 }
 
 .font-mono-num {
@@ -87,18 +70,18 @@ body {
 }
 
 .kanak-gradient-btn {
-  background: linear-gradient(135deg, #002FA7 0%, #6366F1 100%);
+  background: linear-gradient(135deg, #F26522 0%, #E45516 100%);
   color: #ffffff;
-  font-weight: 500;
+  font-weight: 600;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 47, 167, 0.15);
+  box-shadow: 0 4px 12px rgba(242, 101, 34, 0.15);
   transition: all 0.3s ease;
 }
 
 .kanak-gradient-btn:hover {
   opacity: 0.95;
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0, 47, 167, 0.25);
+  box-shadow: 0 6px 18px rgba(242, 101, 34, 0.25);
 }
 
 .kanak-gradient-btn:active {
@@ -106,8 +89,9 @@ body {
 }
 
 .sidebar-gradient-card {
-  background: linear-gradient(135deg, #002FA7 0%, #1e1b4b 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, #FFF5EF 0%, #FFE6D5 100%);
+  color: #F26522;
+  border: 1px solid #FFCDA9;
 }
 
 /* Animations */
@@ -146,7 +130,7 @@ body {
   backdrop-filter: blur(18px) !important;
   -webkit-backdrop-filter: blur(18px) !important;
   border: 1px solid rgba(255, 255, 255, 0.45) !important;
-  box-shadow: 0 10px 30px -5px rgba(0, 47, 167, 0.03), 0 4px 12px -2px rgba(0, 47, 167, 0.02) !important;
+  box-shadow: 0 10px 30px -5px rgba(17, 27, 53, 0.03), 0 4px 12px -2px rgba(17, 27, 53, 0.02) !important;
 }
 
 @keyframes progress-animate {
