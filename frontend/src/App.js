@@ -26,10 +26,7 @@ const AdminSettings = React.lazy(() => import("@/pages/AdminSettings"));
 const AdminBroadcasts = React.lazy(() => import("@/pages/AdminBroadcasts"));
 
 function HomeRoute() {
-  const { user, loading } = useAuth();
-  if (loading) return null;
-  if (!user) return <Landing />;
-  return <Navigate to={user.role === "admin" ? "/admin" : "/dashboard"} replace />;
+  return <Landing />;
 }
 
 export default function App() {

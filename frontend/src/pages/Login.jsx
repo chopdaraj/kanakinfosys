@@ -49,14 +49,17 @@ export default function Login() {
           </Link>
         </div>
 
-        {/* Middle Typography */}
-        <div className="my-auto py-12">
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-[1.15] font-display">
+        {/* Middle Visual & Typography */}
+        <div className="my-auto py-6">
+          <div className="max-w-[280px] w-full rounded-3xl overflow-hidden shadow-xl shadow-orange-500/10 mb-6 border border-orange-100/60 bg-white">
+            <img src="/assets/kanak-hero.png" alt="Kanak Infosys Yield Growth" className="w-full h-auto object-contain rounded-3xl" />
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 leading-[1.15] font-display">
             Precision. <br />
             Discipline. <br />
             <span className="text-[#E8590C]">Yield.</span>
           </h1>
-          <p className="mt-6 text-slate-500 text-sm leading-relaxed max-w-sm font-medium">
+          <p className="mt-4 text-slate-500 text-xs sm:text-sm leading-relaxed max-w-sm font-medium">
             Access your investment portfolio, daily earnings distribution, and referral network in one premium workspace.
           </p>
         </div>
