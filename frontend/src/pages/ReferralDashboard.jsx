@@ -67,7 +67,7 @@ const VisualTreeNode = ({ node, searchQuery, level = 1, isLast = false }) => {
               {node.name}
             </div>
             <div className="text-[10px] text-slate-400 font-mono mt-0.5 truncate">
-              {node.client_id || "CLIXXXXXX"}
+              {node.client_id || "KNK0051"}
             </div>
           </div>
 

@@ -120,24 +120,8 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Bottom Footer Details */}
-        <div className="relative z-10 pt-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4 text-[10px] tracking-wider text-slate-500">
-          <div className="space-y-0.5">
-            <div className="font-bold text-slate-600 uppercase tracking-widest text-[10px]">
-              KANAK INFOSYS - PRIVATE TERMINAL
-            </div>
-            <div className="font-medium text-slate-400 uppercase tracking-wider text-[9px]">
-              DISCIPLINE TODAY, WEALTH TOMORROW
-            </div>
-          </div>
-
-          <div className="text-center sm:text-right">
-            <div className="text-[10px] font-bold text-slate-600 tracking-widest uppercase">
-              YOUR CAPITAL. OUR DISCIPLINE.
-            </div>
-            <div className="w-8 h-0.5 bg-[#F26522] rounded-full mt-1.5 mx-auto sm:ml-auto sm:mr-0" />
-          </div>
-        </div>
+        {/* Bottom spacing spacer */}
+        <div className="hidden sm:block h-2" />
       </section>
 
       {/* ================= RIGHT LOGIN FORM PANEL ================= */}

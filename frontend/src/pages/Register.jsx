@@ -111,7 +111,7 @@ export default function Register() {
                   value={form.referral_code}
                   onChange={set("referral_code")}
                   data-testid="register-referral-input"
-                  placeholder="KNK-XXXXXXXX"
+                  placeholder="CLI0051"
                   className="w-full border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]/20 focus:border-[#F26522] font-mono font-bold uppercase placeholder:text-slate-300 dark:placeholder:text-slate-650 bg-white dark:bg-slate-950 dark:text-white"
                 />
               </div>

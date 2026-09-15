@@ -69,7 +69,7 @@ def create_access_token(user_id: str, email: str, role: str) -> str:
 
 def gen_referral_code(n: int = 8) -> str:
     alpha = string.ascii_uppercase + string.digits
-    return "KNK" + "".join(secrets.choice(alpha) for _ in range(n))
+    return "CLI" + "".join(secrets.choice(alpha) for _ in range(n))
 
 
 def serialize_user(u: dict) -> dict:
@@ -222,7 +222,13 @@ async def compute_user_balances(user_id: ObjectId) -> dict:
     
     user = await db.users.find_one({"_id": user_id})
     referral_code = user.get("referral_code", "") if user else ""
-    referral_count = await db.users.count_documents({"referred_by_code": referral_code}) if referral_code else 0
+    referral_count = await db.users.count_documents({
+        "$or": [
+            {"referred_by_code": referral_code},
+            {"referred_by_code": referral_code.upper() if referral_code else ""},
+            {"referred_by_code": referral_code.lower() if referral_code else ""}
+        ]
+    }) if referral_code else 0
     
     total_earned = total_profit_earned + total_referral_earned
     today_earning = today_profit_earning + today_referral_earning
@@ -392,18 +398,23 @@ async def register(payload: RegisterIn, response: Response):
     referred_by = None
     if payload.referral_code:
         ref_code = payload.referral_code.strip().upper()
-        parent = await db.users.find_one({"referral_code": ref_code})
+        parent = await db.users.find_one({
+            "$or": [
+                {"referral_code": ref_code},
+                {"referral_code": ref_code.lower()},
+            ]
+        })
         if not parent:
             raise HTTPException(status_code=400, detail="Invalid referral code")
-        referred_by = ref_code
+        referred_by = parent.get("referral_code", ref_code)
 
-    # Allocate unique permanent sequence numbers
+    # Allocate unique permanent sequence numbers starting at 51
     max_user = await db.users.find_one({"role": "client"}, sort=[("serial_number", -1)])
-    next_serial = (max_user["serial_number"] + 1) if max_user and "serial_number" in max_user else 50
+    next_serial = (max_user["serial_number"] + 1) if max_user and "serial_number" in max_user and max_user["serial_number"] >= 51 else 51
 
     while True:
-        client_id = f"CLI{next_serial:06d}"
-        code = f"KNK{next_serial:04d}"
+        client_id = f"KNK{next_serial:04d}"
+        code = f"CLI{next_serial:04d}"
         if not await db.users.find_one({"$or": [{"serial_number": next_serial}, {"client_id": client_id}, {"referral_code": code}]}):
             break
         next_serial += 1
@@ -760,20 +771,34 @@ async def my_referrals(user: dict = Depends(get_current_user)):
 
 
 async def build_referral_tree(referral_code: str, max_depth: int = 1) -> dict:
-    node_user = await db.users.find_one({"referral_code": referral_code})
+    node_user = await db.users.find_one({
+        "$or": [
+            {"referral_code": referral_code},
+            {"referral_code": referral_code.upper() if referral_code else ""},
+            {"referral_code": referral_code.lower() if referral_code else ""}
+        ]
+    })
     if not node_user:
         return {}
     children = []
     if max_depth > 0:
-        children_cursor = db.users.find({"referred_by_code": referral_code})
+        children_cursor = db.users.find({
+            "$or": [
+                {"referred_by_code": referral_code},
+                {"referred_by_code": referral_code.upper() if referral_code else ""},
+                {"referred_by_code": referral_code.lower() if referral_code else ""}
+            ]
+        })
         async for c in children_cursor:
-            sub = await build_referral_tree(c["referral_code"], max_depth - 1)
+            sub = await build_referral_tree(c.get("referral_code", ""), max_depth - 1)
             children.append(sub)
     principal = await user_total_deposit(node_user["_id"])
     return {
         "id": str(node_user["_id"]),
         "name": node_user["name"],
         "email": node_user["email"],
+        "client_id": node_user.get("client_id"),
+        "kyc_status": node_user.get("kyc_status", "not_started"),
         "referral_code": node_user["referral_code"],
         "principal": principal,
         "children": children,
@@ -1067,6 +1092,8 @@ async def admin_clients_export(admin: dict = Depends(require_admin)):
     for u in users:
         earn = await compute_user_balances(u["_id"])
         rows.append({
+            "Serial Number": u.get("serial_number"),
+            "Client ID": u.get("client_id"),
             "Name": u.get("name"),
             "Email": u.get("email"),
             "Referral Code": u.get("referral_code"),
@@ -1835,31 +1862,29 @@ async def startup():
 
     # Self-healing migration for existing clients
     existing_clients = await db.users.find({"role": "client"}).sort("created_at", 1).to_list(None)
-    for idx, c in enumerate(existing_clients, start=50):
+    used_serials = set()
+    for idx, c in enumerate(existing_clients, start=51):
         updates = {}
-        if "serial_number" not in c:
-            updates["serial_number"] = idx
-        serial = c.get("serial_number", idx)
-        if "client_id" not in c:
-            updates["client_id"] = f"CLI{serial:06d}"
-        
-        # Format code check
-        code_ok = False
-        ref_code = c.get("referral_code", "")
-        if ref_code.startswith("KNK") and len(ref_code) == 7:
-            try:
-                int(ref_code[3:])
-                code_ok = True
-            except ValueError:
-                pass
-        
-        if not code_ok:
-            new_code = f"KNK{serial:04d}"
+        curr_serial = c.get("serial_number")
+        if not curr_serial or curr_serial < 51 or curr_serial in used_serials:
+            curr_serial = idx
+            while curr_serial in used_serials:
+                curr_serial += 1
+            updates["serial_number"] = curr_serial
+        used_serials.add(curr_serial)
+        serial = curr_serial
+
+        expected_client_id = f"KNK{serial:04d}"
+        if c.get("client_id") != expected_client_id:
+            updates["client_id"] = expected_client_id
+
+        expected_code = f"CLI{serial:04d}"
+        if c.get("referral_code") != expected_code:
             old_code = c.get("referral_code")
-            updates["referral_code"] = new_code
+            updates["referral_code"] = expected_code
             if old_code:
-                await db.users.update_many({"referred_by_code": old_code}, {"$set": {"referred_by_code": new_code}})
-                
+                await db.users.update_many({"referred_by_code": old_code}, {"$set": {"referred_by_code": expected_code}})
+
         if updates:
             await db.users.update_one({"_id": c["_id"]}, {"$set": updates})
 
@@ -1867,14 +1892,14 @@ async def startup():
     admin_pw = os.environ["ADMIN_PASSWORD"]
     existing = await db.users.find_one({"email": admin_email})
     if not existing:
-        code = "KNK000"
+        code = "CLI000"
         await db.users.insert_one({
             "name": "Kanak Admin",
             "email": admin_email,
             "password_hash": hash_password(admin_pw),
             "role": "admin",
             "serial_number": 0,
-            "client_id": "CLI000000",
+            "client_id": "KNK0000",
             "referral_code": code,
             "referred_by_code": None,
             "address_line1": "",
@@ -1894,7 +1919,7 @@ async def startup():
             updates["password_hash"] = hash_password(admin_pw)
         if "serial_number" not in existing:
             updates["serial_number"] = 0
-            updates["client_id"] = "CLI000000"
+            updates["client_id"] = "KNK0000"
         if not existing.get("email_verified"):
             updates["email_verified"] = True
         if not existing.get("mobile_verified"):
