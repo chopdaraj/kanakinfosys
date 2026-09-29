@@ -10,7 +10,9 @@ import logging
 import secrets
 import string
 from datetime import datetime, timezone, timedelta
+from dateutil.relativedelta import relativedelta
 from typing import Optional, List
+from pdf_generator import generate_deposit_form_pdf
 
 import asyncio
 import bcrypt
@@ -1170,6 +1172,117 @@ async def admin_edit_client(user_id: str, payload: AdminEditClientIn, admin: dic
         raise HTTPException(status_code=404, detail="Client not found")
     updated = await db.users.find_one({"_id": ObjectId(user_id)})
     return serialize_user(updated)
+
+
+@api.get("/admin/clients/{client_id}/deposit-pdf")
+async def admin_client_deposit_pdf(
+    client_id: str,
+    preview: bool = False,
+    admin: dict = Depends(require_admin),
+):
+    user = None
+    if ObjectId.is_valid(client_id):
+        user = await db.users.find_one({"_id": ObjectId(client_id)})
+    if not user:
+        user = await db.users.find_one({"client_id": client_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Client not found")
+
+    deposit = await db.deposits.find_one(
+        {"user_id": user["_id"], "status": "approved"},
+        sort=[("deposited_at", 1)],
+    )
+    if not deposit:
+        deposit = await db.deposits.find_one(
+            {"user_id": user["_id"]},
+            sort=[("deposited_at", -1)],
+        )
+
+    acct_date_obj = None
+    if deposit:
+        dep_date = deposit.get("deposit_date")
+        if dep_date:
+            try:
+                acct_date_obj = datetime.strptime(str(dep_date).split("T")[0], "%Y-%m-%d")
+            except Exception:
+                pass
+        if not acct_date_obj and deposit.get("deposited_at"):
+            dep_at = deposit["deposited_at"]
+            if isinstance(dep_at, datetime):
+                acct_date_obj = dep_at
+            else:
+                try:
+                    acct_date_obj = datetime.fromisoformat(str(dep_at).replace("Z", "+00:00"))
+                except Exception:
+                    pass
+
+    if not acct_date_obj and user.get("created_at"):
+        created = user["created_at"]
+        if isinstance(created, datetime):
+            acct_date_obj = created
+        else:
+            try:
+                acct_date_obj = datetime.fromisoformat(str(created).replace("Z", "+00:00"))
+            except Exception:
+                pass
+
+    if not acct_date_obj:
+        acct_date_obj = datetime.now()
+
+    acct_opening_date = acct_date_obj.strftime("%d/%m/%Y")
+
+    lock_date_obj = None
+    if deposit and deposit.get("lock_until"):
+        lock_until = deposit["lock_until"]
+        if isinstance(lock_until, datetime):
+            lock_date_obj = lock_until
+        else:
+            try:
+                lock_date_obj = datetime.fromisoformat(str(lock_until).replace("Z", "+00:00"))
+            except Exception:
+                pass
+
+    if not lock_date_obj:
+        lock_date_obj = acct_date_obj + relativedelta(months=6)
+
+    locking_period_end_date = lock_date_obj.strftime("%d/%m/%Y")
+
+    earn = await compute_user_balances(user["_id"])
+    amount_val = (deposit.get("amount") if deposit else None) or earn.get("principal", 0)
+    if not amount_val and earn.get("principal"):
+        amount_val = earn["principal"]
+
+    payment_type = (deposit.get("payment_method") if deposit else None) or user.get("payment_type") or "Cash"
+    remark = (deposit.get("remarks") if deposit else None) or user.get("nominee") or "SHIVAM"
+
+    now = datetime.now()
+    generated_date = f"{now.day}/{now.month}/{now.year}"
+
+    pdf_data = {
+        "name": user.get("name", "—"),
+        "client_id": user.get("client_id", "—"),
+        "account_opening_date": acct_opening_date,
+        "locking_period_end_date": locking_period_end_date,
+        "amount": amount_val,
+        "payment_type": payment_type,
+        "remark": remark,
+        "generated_date": generated_date,
+    }
+
+    pdf_bytes = generate_deposit_form_pdf(pdf_data)
+
+    safe_cid = user.get("client_id") or str(user["_id"])
+    disposition_type = "inline" if preview else "attachment"
+    filename = f"Customer_Deposit_Form_{safe_cid}.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'{disposition_type}; filename="{filename}"',
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+        },
+    )
 
 
 @api.delete("/admin/clients/{user_id}")
