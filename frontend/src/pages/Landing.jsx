@@ -1,8 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, ShieldCheck, LineChart, Users } from "lucide-react";
-import { useAuth } from "@/lib/auth";
-
 const Stat = ({ label, value }) => (
   <div className="border-l-2 border-[#F26522] pl-4">
     <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">{label}</div>
@@ -11,7 +9,6 @@ const Stat = ({ label, value }) => (
 );
 
 export default function Landing() {
-  const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] dark:bg-slate-950 text-slate-800 dark:text-slate-200 flex flex-col justify-between font-body transition-colors duration-300">
@@ -26,31 +23,20 @@ export default function Landing() {
             />
           </Link>
           <div className="flex items-center gap-4">
-            {user ? (
-              <Link
-                to={user.role === "admin" ? "/admin" : "/dashboard"}
-                className="px-5 py-2.5 bg-[#F26522] hover:bg-[#E45516] text-white rounded-xl text-xs font-bold shadow-md shadow-orange-500/15 active:scale-95 transition-all"
-              >
-                Go to Dashboard
-              </Link>
-            ) : (
-              <>
-                <Link 
-                  to="/login" 
-                  data-testid="landing-login-link" 
-                  className="text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-[#F26522] transition"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  data-testid="landing-register-link"
-                  className="px-5 py-2.5 bg-[#F26522] hover:bg-[#E45516] text-white rounded-xl text-xs font-bold shadow-md shadow-orange-500/15 active:scale-95 transition-all"
-                >
-                  Open Account
-                </Link>
-              </>
-            )}
+            <Link 
+              to="/login" 
+              data-testid="landing-login-link" 
+              className="text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-[#F26522] transition"
+            >
+              Login
+            </Link>
+            <Link
+              to="/register"
+              data-testid="landing-register-link"
+              className="px-5 py-2.5 bg-[#F26522] hover:bg-[#E45516] text-white rounded-xl text-xs font-bold shadow-md shadow-orange-500/15 active:scale-95 transition-all"
+            >
+              Open Account
+            </Link>
           </div>
         </div>
       </header>
@@ -76,18 +62,18 @@ export default function Landing() {
               
               <div className="flex flex-wrap items-center gap-4 pt-4">
                 <Link
-                  to={user ? (user.role === "admin" ? "/admin" : "/dashboard") : "/register"}
+                  to="/register"
                   data-testid="hero-cta-register"
                   className="px-6 py-3.5 bg-[#F26522] hover:bg-[#E45516] text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-orange-500/20 active:scale-95 transition-all"
                 >
-                  {user ? "Open Dashboard" : "Start Investing"} <ArrowRight className="w-4 h-4" />
+                  Start Investing <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
-                  to={user ? (user.role === "admin" ? "/admin" : "/dashboard") : "/login"}
+                  to="/login"
                   data-testid="hero-cta-login"
                   className="px-6 py-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-orange-200 hover:text-[#F26522] hover:bg-orange-50/40 dark:hover:bg-slate-750 rounded-xl text-xs font-bold shadow-sm active:scale-95 transition-all"
                 >
-                  {user ? "My Account" : "Client Access"}
+                  Client Access
                 </Link>
               </div>
 
