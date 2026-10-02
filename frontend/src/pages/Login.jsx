@@ -44,19 +44,21 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen lg:h-screen lg:overflow-hidden grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 bg-[#F8F9FA] font-body text-slate-800">
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col lg:flex-row bg-[#F8F9FA] font-body text-slate-800">
       
       {/* ================= LEFT BRAND & FINANCIAL VISUAL PANEL ================= */}
-      <section className="md:col-span-6 lg:col-span-7 bg-[#FFF6EE] p-8 sm:p-12 lg:p-14 xl:p-16 flex flex-col justify-between relative overflow-hidden border-b lg:border-b-0 lg:border-r border-orange-100/70">
-        
-        {/* Background 3D Centerpiece Visual matching reference */}
-        <div className="hidden md:block absolute right-0 top-0 bottom-0 w-[58%] max-w-[480px] pointer-events-none select-none z-0">
-          <img
-            src="/assets/kanak-terminal-3d.png"
-            alt="Kanak Infosys Quantitative Terminal"
-            className="w-full h-full object-cover object-left"
-          />
-        </div>
+      <section 
+        className="w-full lg:w-[62%] xl:w-[64%] min-h-[520px] lg:min-h-screen flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 relative overflow-hidden border-b lg:border-b-0 lg:border-r border-orange-100/60"
+        style={{
+          backgroundImage: "url('/assets/kanak-login-hero.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat"
+        }}
+      >
+        {/* Subtle readability gradient mask over the left text area only - keeps the 3D illustration on the right completely clear */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/75 via-white/35 to-transparent pointer-events-none z-0 hidden sm:block" />
+        <div className="absolute inset-0 bg-white/75 pointer-events-none z-0 sm:hidden" />
 
         {/* Top Header: Logo & Category Label */}
         <div className="relative z-10">
@@ -67,7 +69,7 @@ export default function Login() {
               className="h-8 sm:h-9 w-auto object-contain hover:opacity-90 transition-opacity"
             />
           </Link>
-          <div className="mt-6 text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase">
+          <div className="mt-4 sm:mt-5 text-[10px] sm:text-[11px] font-bold text-slate-500 tracking-[0.2em] uppercase">
             Institutional Quantitative Capital
           </div>
         </div>
@@ -76,21 +78,21 @@ export default function Login() {
         <div className="my-auto py-6 relative z-10 max-w-sm space-y-4">
           
           {/* Main Headline */}
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.08] font-display text-[#0A192F]">
+          <h1 className="text-3xl sm:text-4xl xl:text-5xl font-extrabold tracking-tight leading-[1.08] font-display text-[#0A192F]">
             Precision. <br />
             Discipline. <br />
             <span className="text-[#F26522]">Yield.</span>
           </h1>
 
-          <p className="text-slate-500 text-xs sm:text-[13px] leading-relaxed max-w-[310px] font-normal pt-1">
+          <p className="text-slate-600 text-xs sm:text-[13px] leading-relaxed max-w-[310px] font-normal pt-1">
             Access your investment portfolio, daily earnings distribution, and referral network in one premium workspace.
           </p>
 
           {/* 3 Feature items with soft-box icons and labels underneath */}
-          <div className="flex items-start gap-3 sm:gap-4 pt-4">
+          <div className="flex items-start gap-3 sm:gap-4 pt-3">
             {/* 1. Automated Strategies */}
             <div className="flex flex-col items-center text-center w-[76px]">
-              <div className="w-11 h-11 rounded-xl bg-white/95 border border-orange-100 shadow-sm flex items-center justify-center text-[#F26522] mb-1.5 transition-transform hover:scale-105">
+              <div className="w-11 h-11 rounded-xl bg-white/95 backdrop-blur-sm border border-orange-100 shadow-sm flex items-center justify-center text-[#F26522] mb-1.5 transition-transform hover:scale-105">
                 <BarChart3 className="w-5 h-5 stroke-[2.2]" />
               </div>
               <span className="text-[10px] font-bold text-slate-700 leading-tight">
@@ -100,7 +102,7 @@ export default function Login() {
 
             {/* 2. Secure & Transparent */}
             <div className="flex flex-col items-center text-center w-[76px]">
-              <div className="w-11 h-11 rounded-xl bg-white/95 border border-orange-100 shadow-sm flex items-center justify-center text-[#F26522] mb-1.5 transition-transform hover:scale-105">
+              <div className="w-11 h-11 rounded-xl bg-white/95 backdrop-blur-sm border border-orange-100 shadow-sm flex items-center justify-center text-[#F26522] mb-1.5 transition-transform hover:scale-105">
                 <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
               </div>
               <span className="text-[10px] font-bold text-slate-700 leading-tight">
@@ -110,7 +112,7 @@ export default function Login() {
 
             {/* 3. Grow with Referrals */}
             <div className="flex flex-col items-center text-center w-[76px]">
-              <div className="w-11 h-11 rounded-xl bg-white/95 border border-orange-100 shadow-sm flex items-center justify-center text-[#F26522] mb-1.5 transition-transform hover:scale-105">
+              <div className="w-11 h-11 rounded-xl bg-white/95 backdrop-blur-sm border border-orange-100 shadow-sm flex items-center justify-center text-[#F26522] mb-1.5 transition-transform hover:scale-105">
                 <Users className="w-5 h-5 stroke-[2.2]" />
               </div>
               <span className="text-[10px] font-bold text-slate-700 leading-tight">
@@ -125,7 +127,7 @@ export default function Login() {
       </section>
 
       {/* ================= RIGHT LOGIN FORM PANEL ================= */}
-      <section className="md:col-span-6 lg:col-span-5 bg-[#F8F9FA] flex flex-col justify-between p-6 sm:p-10 lg:p-12 relative overflow-y-auto">
+      <section className="w-full lg:w-[38%] xl:w-[36%] bg-[#F8F9FA] flex flex-col justify-between p-6 sm:p-8 lg:p-10 xl:p-12 relative overflow-y-auto">
         
         {/* Top-Right Institutional Quote */}
         <div className="text-right hidden sm:block pr-2 pt-1">
