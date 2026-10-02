@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
+import loginBackground from "@/assets/kanak-login-background.png";
 import { 
   Mail, 
   Lock, 
@@ -48,12 +49,12 @@ export default function Login() {
       
       {/* ================= LEFT BRAND & FINANCIAL VISUAL PANEL ================= */}
       <section 
-        className="w-full lg:w-[62%] xl:w-[64%] min-h-[520px] lg:min-h-screen flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 relative overflow-hidden border-b lg:border-b-0 lg:border-r border-orange-100/60"
+        className="login-hero-section w-full lg:w-[64%] xl:w-[65%] min-h-[520px] lg:min-h-screen flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 relative overflow-hidden border-b lg:border-b-0 lg:border-r border-orange-100/60"
         style={{
-          backgroundImage: "url('/assets/kanak-login-hero.png')",
+          backgroundImage: `url(${loginBackground})`,
           backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat"
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "right center"
         }}
       >
         {/* Subtle readability gradient mask over the left text area only - keeps the 3D illustration on the right completely clear */}
@@ -75,7 +76,7 @@ export default function Login() {
         </div>
 
         {/* Middle Main Content */}
-        <div className="my-auto py-6 relative z-10 max-w-sm space-y-4">
+        <div className="my-auto py-5 relative z-10 max-w-sm space-y-4 bg-white/75 sm:bg-transparent backdrop-blur-xs sm:backdrop-blur-none p-4 sm:p-0 rounded-2xl border border-orange-100/60 sm:border-0 shadow-sm sm:shadow-none">
           
           {/* Main Headline */}
           <h1 className="text-3xl sm:text-4xl xl:text-5xl font-extrabold tracking-tight leading-[1.08] font-display text-[#0A192F]">
@@ -127,7 +128,7 @@ export default function Login() {
       </section>
 
       {/* ================= RIGHT LOGIN FORM PANEL ================= */}
-      <section className="w-full lg:w-[38%] xl:w-[36%] bg-[#F8F9FA] flex flex-col justify-between p-6 sm:p-8 lg:p-10 xl:p-12 relative overflow-y-auto">
+      <section className="w-full lg:w-[36%] xl:w-[35%] bg-[#F8F9FA] flex flex-col justify-between p-6 sm:p-8 lg:p-10 xl:p-12 relative overflow-y-auto">
         
         {/* Top-Right Institutional Quote */}
         <div className="text-right hidden sm:block pr-2 pt-1">
