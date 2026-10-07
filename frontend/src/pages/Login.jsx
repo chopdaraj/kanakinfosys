@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import loginBackground from "@/assets/kanak-login-background.png";
+import loginMobileVisual from "@/assets/kanak-login-mobile.png";
 import { 
   Mail, 
   Lock, 
@@ -45,21 +46,24 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col lg:flex-row bg-[#F8F9FA] font-body text-slate-800">
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col lg:flex-row bg-[#F8F9FA] font-body text-slate-800 overflow-x-hidden">
       
-      {/* ================= LEFT BRAND & FINANCIAL VISUAL PANEL ================= */}
-      <section 
-        className="login-hero-section w-full lg:w-[64%] xl:w-[65%] min-h-[520px] lg:min-h-screen flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 relative overflow-hidden border-b lg:border-b-0 lg:border-r border-orange-100/60"
-        style={{
-          backgroundImage: `url(${loginBackground})`,
-          backgroundSize: "cover",
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "right center"
-        }}
-      >
-        {/* Subtle readability gradient mask over the left text area only - keeps the 3D illustration on the right completely clear */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white/75 via-white/35 to-transparent pointer-events-none z-0 hidden sm:block" />
-        <div className="absolute inset-0 bg-white/75 pointer-events-none z-0 sm:hidden" />
+      {/* ================= LEFT / HERO SECTION ================= */}
+      <section className="w-full lg:w-[64%] xl:w-[65%] min-h-auto lg:min-h-screen flex flex-col justify-between p-4 xs:p-6 sm:p-10 lg:p-12 xl:p-14 relative overflow-hidden bg-gradient-to-b from-[#FFFBF7] via-[#FFF5EB] to-[#FFF9F3] lg:bg-none border-b lg:border-b-0 lg:border-r border-orange-100/70">
+        
+        {/* Desktop-only full-bleed background artwork */}
+        <div 
+          className="hidden lg:block absolute inset-0 pointer-events-none select-none z-0"
+          style={{
+            backgroundImage: `url(${loginBackground})`,
+            backgroundSize: "cover",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "right center"
+          }}
+        />
+
+        {/* Desktop-only readability gradient mask over the left text area */}
+        <div className="hidden lg:block absolute inset-0 bg-gradient-to-r from-white/75 via-white/35 to-transparent pointer-events-none z-0" />
 
         {/* Top Header: Logo & Category Label */}
         <div className="relative z-10">
@@ -70,13 +74,22 @@ export default function Login() {
               className="h-8 sm:h-9 w-auto object-contain hover:opacity-90 transition-opacity"
             />
           </Link>
-          <div className="mt-4 sm:mt-5 text-[10px] sm:text-[11px] font-bold text-slate-500 tracking-[0.2em] uppercase">
+          <div className="mt-2 sm:mt-5 text-[8.5px] xs:text-[10px] sm:text-[11px] font-bold text-slate-500 tracking-[0.08em] xs:tracking-[0.14em] sm:tracking-[0.2em] uppercase max-w-full">
             Institutional Quantitative Capital
           </div>
         </div>
 
+        {/* Mobile Financial Hero Visual Card - dedicated mobile composition */}
+        <div className="lg:hidden my-3 sm:my-5 w-full h-[180px] xs:h-[210px] sm:h-[240px] rounded-2xl overflow-hidden shadow-md shadow-orange-500/10 border border-orange-200/70 relative bg-[#FFF3E6] z-10">
+          <img
+            src={loginMobileVisual}
+            alt="Kanak Quantitative Yield Platform"
+            className="w-full h-full object-cover object-center select-none pointer-events-none"
+          />
+        </div>
+
         {/* Middle Main Content */}
-        <div className="my-auto py-5 relative z-10 max-w-sm space-y-4 bg-white/75 sm:bg-transparent backdrop-blur-xs sm:backdrop-blur-none p-4 sm:p-0 rounded-2xl border border-orange-100/60 sm:border-0 shadow-sm sm:shadow-none">
+        <div className="my-auto py-1 sm:py-5 relative z-10 w-full max-w-sm space-y-3 sm:space-y-4">
           
           {/* Main Headline */}
           <h1 className="text-3xl sm:text-4xl xl:text-5xl font-extrabold tracking-tight leading-[1.08] font-display text-[#0A192F]">
@@ -85,50 +98,50 @@ export default function Login() {
             <span className="text-[#F26522]">Yield.</span>
           </h1>
 
-          <p className="text-slate-600 text-xs sm:text-[13px] leading-relaxed max-w-[310px] font-normal pt-1">
+          <p className="text-slate-600 text-xs sm:text-[13px] leading-relaxed w-full max-w-[280px] xs:max-w-[340px] font-normal pt-0.5">
             Access your investment portfolio, daily earnings distribution, and referral network in one premium workspace.
           </p>
 
           {/* 3 Feature items with soft-box icons and labels underneath */}
-          <div className="flex items-start gap-3 sm:gap-4 pt-3">
+          <div className="grid grid-cols-3 gap-1 xs:gap-2 sm:gap-4 pt-2.5 w-full max-w-[280px] xs:max-w-[340px]">
             {/* 1. Automated Strategies */}
-            <div className="flex flex-col items-center text-center w-[76px]">
-              <div className="w-11 h-11 rounded-xl bg-white/95 backdrop-blur-sm border border-orange-100 shadow-sm flex items-center justify-center text-[#F26522] mb-1.5 transition-transform hover:scale-105">
-                <BarChart3 className="w-5 h-5 stroke-[2.2]" />
+            <div className="flex flex-col items-center text-center min-w-0">
+              <div className="w-8 h-8 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-xl bg-white/95 backdrop-blur-sm border border-orange-100 shadow-sm flex items-center justify-center text-[#F26522] mb-1 transition-transform hover:scale-105">
+                <BarChart3 className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-5 sm:h-5 stroke-[2.2]" />
               </div>
-              <span className="text-[10px] font-bold text-slate-700 leading-tight">
+              <span className="text-[8.5px] xs:text-[10px] font-bold text-slate-700 leading-tight">
                 Automated<br />Strategies
               </span>
             </div>
 
             {/* 2. Secure & Transparent */}
-            <div className="flex flex-col items-center text-center w-[76px]">
-              <div className="w-11 h-11 rounded-xl bg-white/95 backdrop-blur-sm border border-orange-100 shadow-sm flex items-center justify-center text-[#F26522] mb-1.5 transition-transform hover:scale-105">
-                <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
+            <div className="flex flex-col items-center text-center min-w-0">
+              <div className="w-8 h-8 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-xl bg-white/95 backdrop-blur-sm border border-orange-100 shadow-sm flex items-center justify-center text-[#F26522] mb-1 transition-transform hover:scale-105">
+                <ShieldCheck className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-5 sm:h-5 stroke-[2.2]" />
               </div>
-              <span className="text-[10px] font-bold text-slate-700 leading-tight">
+              <span className="text-[8.5px] xs:text-[10px] font-bold text-slate-700 leading-tight">
                 Secure &<br />Transparent
               </span>
             </div>
 
             {/* 3. Grow with Referrals */}
-            <div className="flex flex-col items-center text-center w-[76px]">
-              <div className="w-11 h-11 rounded-xl bg-white/95 backdrop-blur-sm border border-orange-100 shadow-sm flex items-center justify-center text-[#F26522] mb-1.5 transition-transform hover:scale-105">
-                <Users className="w-5 h-5 stroke-[2.2]" />
+            <div className="flex flex-col items-center text-center min-w-0">
+              <div className="w-8 h-8 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-xl bg-white/95 backdrop-blur-sm border border-orange-100 shadow-sm flex items-center justify-center text-[#F26522] mb-1 transition-transform hover:scale-105">
+                <Users className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-5 sm:h-5 stroke-[2.2]" />
               </div>
-              <span className="text-[10px] font-bold text-slate-700 leading-tight">
+              <span className="text-[8.5px] xs:text-[10px] font-bold text-slate-700 leading-tight">
                 Grow with<br />Referrals
               </span>
             </div>
           </div>
         </div>
 
-        {/* Bottom spacing spacer */}
-        <div className="hidden sm:block h-2" />
+        {/* Bottom spacing spacer on desktop */}
+        <div className="hidden lg:block h-2" />
       </section>
 
-      {/* ================= RIGHT LOGIN FORM PANEL ================= */}
-      <section className="w-full lg:w-[36%] xl:w-[35%] bg-[#F8F9FA] flex flex-col justify-between p-6 sm:p-8 lg:p-10 xl:p-12 relative overflow-y-auto">
+      {/* ================= RIGHT / LOGIN FORM SECTION ================= */}
+      <section className="w-full lg:w-[36%] xl:w-[35%] bg-[#F8F9FA] flex flex-col justify-between p-3 xs:p-6 sm:p-8 lg:p-10 xl:p-12 relative overflow-y-auto">
         
         {/* Top-Right Institutional Quote */}
         <div className="text-right hidden sm:block pr-2 pt-1">
@@ -139,20 +152,20 @@ export default function Login() {
         </div>
 
         {/* Floating Centered Login Card */}
-        <div className="my-auto flex justify-center py-6">
-          <div className="w-full max-w-[430px] bg-white rounded-[26px] p-8 sm:p-10 shadow-2xl shadow-slate-200/50 border border-slate-100/90 transition-all duration-200">
+        <div className="my-auto flex justify-center py-3 sm:py-6 w-full min-w-0">
+          <div className="w-full max-w-[430px] min-w-0 bg-white rounded-[24px] p-4 xs:p-7 sm:p-9 shadow-xl shadow-slate-200/50 border border-slate-100/90 transition-all duration-200">
             
-            <form onSubmit={onSubmit} data-testid="login-form" className="space-y-5">
+            <form onSubmit={onSubmit} data-testid="login-form" className="space-y-4 sm:space-y-5 w-full min-w-0">
               
               {/* Header */}
               <div>
                 <span className="text-[11px] font-bold text-[#F26522] tracking-widest uppercase block mb-1">
                   CLIENT ACCESS
                 </span>
-                <h2 className="text-3xl font-extrabold text-[#0A192F] tracking-tight font-display">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0A192F] tracking-tight font-display">
                   Sign In
                 </h2>
-                <p className="text-xs text-slate-500 mt-2 font-medium">
+                <p className="text-xs text-slate-500 mt-1.5 sm:mt-2 font-medium">
                   New to the platform?{" "}
                   <Link
                     to="/register"
@@ -165,14 +178,14 @@ export default function Login() {
               </div>
 
               {/* Form Input Fields */}
-              <div className="space-y-4 pt-1">
+              <div className="space-y-3.5 sm:space-y-4 pt-1 w-full min-w-0">
                 
                 {/* EMAIL */}
-                <div>
+                <div className="w-full min-w-0">
                   <label className="text-xs font-semibold text-slate-700 block mb-1.5">
                     Email Address
                   </label>
-                  <div className="relative">
+                  <div className="relative w-full min-w-0">
                     <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                       <Mail className="w-4 h-4" />
                     </span>
@@ -183,13 +196,13 @@ export default function Login() {
                       onChange={(e) => setEmail(e.target.value)}
                       data-testid="login-email-input"
                       placeholder="you@company.com"
-                      className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#F26522]/15 focus:border-[#F26522] transition-all font-normal"
+                      className="w-full min-w-0 pl-10 pr-4 py-2.5 sm:py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#F26522]/15 focus:border-[#F26522] transition-all font-normal"
                     />
                   </div>
                 </div>
 
                 {/* PASSWORD */}
-                <div>
+                <div className="w-full min-w-0">
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-xs font-semibold text-slate-700">
                       Password
@@ -202,7 +215,7 @@ export default function Login() {
                       Forgot password?
                     </button>
                   </div>
-                  <div className="relative">
+                  <div className="relative w-full min-w-0">
                     <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                       <Lock className="w-4 h-4" />
                     </span>
@@ -213,7 +226,7 @@ export default function Login() {
                       onChange={(e) => setPassword(e.target.value)}
                       data-testid="login-password-input"
                       placeholder="••••••••"
-                      className="w-full pl-10 pr-11 py-2.5 sm:py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#F26522]/15 focus:border-[#F26522] transition-all font-normal"
+                      className="w-full min-w-0 pl-10 pr-11 py-2.5 sm:py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#F26522]/15 focus:border-[#F26522] transition-all font-normal"
                     />
                     <button
                       type="button"

@@ -27,6 +27,12 @@
   }
 }
 
+html, body, #root {
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
+}
+
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, sans-serif;
