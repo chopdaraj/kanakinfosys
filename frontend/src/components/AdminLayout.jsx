@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   Settings,
+  FileText,
   Sun,
   Moon
 } from "lucide-react";
@@ -52,6 +53,7 @@ export default function AdminLayout({ children }) {
     { label: "Clients", path: "/admin/clients", icon: Users },
     { label: "Referrals", path: "/admin/tree", icon: Compass },
     { label: "Broadcasts", path: "/admin/broadcasts", icon: Bell },
+    { label: "PDF & Terms", path: "/admin/pdf-settings", icon: FileText },
     { label: "Settings", path: "/admin/settings", icon: Settings },
   ];
 

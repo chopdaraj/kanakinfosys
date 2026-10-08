@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { Settings, ShieldCheck, Landmark, Percent, Lock } from "lucide-react";
+import { Settings, ShieldCheck, Landmark, Percent, Lock, FileText } from "lucide-react";
 
 export default function AdminSettings() {
   const [form, setForm] = useState({
@@ -217,6 +218,23 @@ export default function AdminSettings() {
               >
                 {saving ? "Saving Changes..." : "Commit Settings"}
               </button>
+            </div>
+
+            {/* Customer Deposit PDF Quick Card */}
+            <div className="kanak-card p-6 space-y-3.5 border border-orange-100 bg-gradient-to-br from-white to-orange-50/40">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-orange-600" />
+                <h3 className="text-sm font-bold text-slate-800">Customer Deposit PDF</h3>
+              </div>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Manage letterhead branding, dynamic Terms & Conditions clauses, and preview generated deposit agreements.
+              </p>
+              <Link
+                to="/admin/pdf-settings"
+                className="inline-flex items-center justify-center w-full py-2.5 px-4 rounded-xl bg-orange-50 hover:bg-orange-100 text-[#F26522] text-xs font-bold transition border border-orange-200"
+              >
+                Open Terms & PDF Manager →
+              </Link>
             </div>
           </div>
         </form>

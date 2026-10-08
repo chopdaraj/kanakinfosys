@@ -12,7 +12,7 @@ import string
 from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
 from typing import Optional, List
-from pdf_generator import generate_deposit_form_pdf
+from pdf_generator import generate_deposit_form_pdf, DEFAULT_TERMS
 
 import asyncio
 import bcrypt
@@ -1174,6 +1174,45 @@ async def admin_edit_client(user_id: str, payload: AdminEditClientIn, admin: dic
     return serialize_user(updated)
 
 
+# -------------------- PDF Management Models & Endpoints --------------------
+class PdfTermCreate(BaseModel):
+    title: str
+    description: str
+    enabled: Optional[bool] = True
+    order: Optional[int] = None
+
+class PdfTermUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    enabled: Optional[bool] = None
+    order: Optional[int] = None
+
+class PdfTermsReorder(BaseModel):
+    order_ids: List[str]
+
+class PdfSettingsUpdate(BaseModel):
+    company_name: Optional[str] = None
+    phone_primary: Optional[str] = None
+    phone_secondary: Optional[str] = None
+    email: Optional[str] = None
+    website: Optional[str] = None
+    office_address: Optional[str] = None
+
+
+async def ensure_default_terms_seeded():
+    count = await db.pdf_terms.count_documents({})
+    if count == 0:
+        for idx, t in enumerate(DEFAULT_TERMS, start=1):
+            await db.pdf_terms.insert_one({
+                "order": idx,
+                "title": t["title"],
+                "description": t["description"],
+                "enabled": t.get("enabled", True),
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc)
+            })
+
+
 @api.get("/admin/clients/{client_id}/deposit-pdf")
 async def admin_client_deposit_pdf(
     client_id: str,
@@ -1269,7 +1308,14 @@ async def admin_client_deposit_pdf(
         "generated_date": generated_date,
     }
 
-    pdf_bytes = generate_deposit_form_pdf(pdf_data)
+    # Dynamic Terms from DB
+    await ensure_default_terms_seeded()
+    terms_cursor = db.pdf_terms.find({"enabled": True}).sort("order", 1)
+    active_terms = await terms_cursor.to_list(length=300)
+    if not active_terms:
+        active_terms = DEFAULT_TERMS
+
+    pdf_bytes = generate_deposit_form_pdf(pdf_data, terms_list=active_terms)
 
     safe_cid = user.get("client_id") or str(user["_id"])
     disposition_type = "inline" if preview else "attachment"
@@ -1280,6 +1326,280 @@ async def admin_client_deposit_pdf(
         media_type="application/pdf",
         headers={
             "Content-Disposition": f'{disposition_type}; filename="{filename}"',
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+        },
+    )
+
+
+@api.get("/admin/pdf/terms")
+async def admin_get_pdf_terms(admin: dict = Depends(require_admin)):
+    await ensure_default_terms_seeded()
+    docs = await db.pdf_terms.find().sort("order", 1).to_list(length=300)
+    return [
+        {
+            "id": str(d["_id"]),
+            "order": d.get("order", 0),
+            "title": d.get("title", ""),
+            "description": d.get("description", ""),
+            "enabled": d.get("enabled", True),
+        }
+        for d in docs
+    ]
+
+
+@api.post("/admin/pdf/terms")
+async def admin_create_pdf_term(data: PdfTermCreate, admin: dict = Depends(require_admin)):
+    if not data.title.strip():
+        raise HTTPException(status_code=400, detail="Title cannot be empty")
+    order_val = data.order
+    if order_val is None:
+        highest = await db.pdf_terms.find_one(sort=[("order", -1)])
+        order_val = (highest["order"] + 1) if (highest and "order" in highest) else 1
+    
+    new_doc = {
+        "order": order_val,
+        "title": data.title.strip(),
+        "description": data.description.strip(),
+        "enabled": True if data.enabled is None else data.enabled,
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc),
+    }
+    res = await db.pdf_terms.insert_one(new_doc)
+    return {
+        "id": str(res.inserted_id),
+        "order": new_doc["order"],
+        "title": new_doc["title"],
+        "description": new_doc["description"],
+        "enabled": new_doc["enabled"],
+    }
+
+
+@api.put("/admin/pdf/terms/{term_id}")
+async def admin_update_pdf_term(term_id: str, data: PdfTermUpdate, admin: dict = Depends(require_admin)):
+    if not ObjectId.is_valid(term_id):
+        raise HTTPException(status_code=400, detail="Invalid term ID")
+    up = {"updated_at": datetime.now(timezone.utc)}
+    if data.title is not None:
+        up["title"] = data.title.strip()
+    if data.description is not None:
+        up["description"] = data.description.strip()
+    if data.enabled is not None:
+        up["enabled"] = data.enabled
+    if data.order is not None:
+        up["order"] = data.order
+
+    r = await db.pdf_terms.update_one({"_id": ObjectId(term_id)}, {"$set": up})
+    if r.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Term not found")
+    updated = await db.pdf_terms.find_one({"_id": ObjectId(term_id)})
+    return {
+        "id": str(updated["_id"]),
+        "order": updated.get("order", 0),
+        "title": updated.get("title", ""),
+        "description": updated.get("description", ""),
+        "enabled": updated.get("enabled", True),
+    }
+
+
+@api.delete("/admin/pdf/terms/{term_id}")
+async def admin_delete_pdf_term(term_id: str, admin: dict = Depends(require_admin)):
+    if not ObjectId.is_valid(term_id):
+        raise HTTPException(status_code=400, detail="Invalid term ID")
+    r = await db.pdf_terms.delete_one({"_id": ObjectId(term_id)})
+    if r.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Term not found")
+    
+    # Renumber remaining sequentially
+    remaining = await db.pdf_terms.find().sort("order", 1).to_list(300)
+    for idx, doc in enumerate(remaining, start=1):
+        await db.pdf_terms.update_one({"_id": doc["_id"]}, {"$set": {"order": idx}})
+    
+    return {"ok": True, "message": "Term deleted and renumbered successfully"}
+
+
+@api.post("/admin/pdf/terms/{term_id}/duplicate")
+async def admin_duplicate_pdf_term(term_id: str, admin: dict = Depends(require_admin)):
+    if not ObjectId.is_valid(term_id):
+        raise HTTPException(status_code=400, detail="Invalid term ID")
+    orig = await db.pdf_terms.find_one({"_id": ObjectId(term_id)})
+    if not orig:
+        raise HTTPException(status_code=404, detail="Term not found")
+    
+    orig_order = orig.get("order", 1)
+    await db.pdf_terms.update_many({"order": {"$gt": orig_order}}, {"$inc": {"order": 1}})
+    
+    new_doc = {
+        "order": orig_order + 1,
+        "title": f"{orig.get('title', '')} (Copy)",
+        "description": orig.get("description", ""),
+        "enabled": orig.get("enabled", True),
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc),
+    }
+    res = await db.pdf_terms.insert_one(new_doc)
+    return {
+        "id": str(res.inserted_id),
+        "order": new_doc["order"],
+        "title": new_doc["title"],
+        "description": new_doc["description"],
+        "enabled": new_doc["enabled"],
+    }
+
+
+@api.put("/admin/pdf/terms/reorder")
+async def admin_reorder_pdf_terms(data: PdfTermsReorder, admin: dict = Depends(require_admin)):
+    for idx, tid in enumerate(data.order_ids, start=1):
+        if ObjectId.is_valid(tid):
+            await db.pdf_terms.update_one({"_id": ObjectId(tid)}, {"$set": {"order": idx}})
+    docs = await db.pdf_terms.find().sort("order", 1).to_list(300)
+    return [
+        {
+            "id": str(d["_id"]),
+            "order": d.get("order", 0),
+            "title": d.get("title", ""),
+            "description": d.get("description", ""),
+            "enabled": d.get("enabled", True),
+        }
+        for d in docs
+    ]
+
+
+@api.post("/admin/pdf/terms/reset")
+async def admin_reset_pdf_terms(admin: dict = Depends(require_admin)):
+    await db.pdf_terms.delete_many({})
+    for idx, t in enumerate(DEFAULT_TERMS, start=1):
+        await db.pdf_terms.insert_one({
+            "order": idx,
+            "title": t["title"],
+            "description": t["description"],
+            "enabled": t.get("enabled", True),
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc)
+        })
+    docs = await db.pdf_terms.find().sort("order", 1).to_list(300)
+    return [
+        {
+            "id": str(d["_id"]),
+            "order": d.get("order", 0),
+            "title": d.get("title", ""),
+            "description": d.get("description", ""),
+            "enabled": d.get("enabled", True),
+        }
+        for d in docs
+    ]
+
+
+@api.get("/admin/pdf/settings")
+async def admin_get_pdf_settings(admin: dict = Depends(require_admin)):
+    s = await db.pdf_settings.find_one({"type": "deposit_pdf"})
+    if not s:
+        s = {
+            "company_name": "Kanak Infosys",
+            "phone_primary": "+91 94084 09798",
+            "phone_secondary": "+91 93165 96408",
+            "email": "kanakinfosyss@gmail.com",
+            "website": "www.kanakinfosys.com",
+            "office_address": "E-1025, Ganesh Glory-11, Jagatpur Road, Gota, Ahmedabad, Gujarat-382470"
+        }
+    return {
+        "company_name": s.get("company_name", "Kanak Infosys"),
+        "phone_primary": s.get("phone_primary", "+91 94084 09798"),
+        "phone_secondary": s.get("phone_secondary", "+91 93165 96408"),
+        "email": s.get("email", "kanakinfosyss@gmail.com"),
+        "website": s.get("website", "www.kanakinfosys.com"),
+        "office_address": s.get("office_address", "E-1025, Ganesh Glory-11, Jagatpur Road, Gota, Ahmedabad, Gujarat-382470"),
+    }
+
+
+@api.put("/admin/pdf/settings")
+async def admin_update_pdf_settings(data: PdfSettingsUpdate, admin: dict = Depends(require_admin)):
+    up = {k: v for k, v in data.dict().items() if v is not None}
+    up["updated_at"] = datetime.now(timezone.utc)
+    await db.pdf_settings.update_one({"type": "deposit_pdf"}, {"$set": up}, upsert=True)
+    return await admin_get_pdf_settings(admin)
+
+
+@api.get("/admin/pdf/preview")
+async def admin_preview_pdf(
+    client_id: Optional[str] = None,
+    admin: dict = Depends(require_admin),
+):
+    now = datetime.now()
+    pdf_data = {
+        "name": "V;LKWEVT",
+        "client_id": "KNK0052",
+        "account_opening_date": "25/08/2026",
+        "locking_period_end_date": "25/02/2027",
+        "amount": 0,
+        "payment_type": "Cash",
+        "remark": "SHIVAM",
+        "generated_date": f"{now.day}/{now.month}/{now.year}",
+    }
+
+    if client_id:
+        user = None
+        if ObjectId.is_valid(client_id):
+            user = await db.users.find_one({"_id": ObjectId(client_id)})
+        if not user:
+            user = await db.users.find_one({"client_id": client_id})
+        if user:
+            deposit = await db.deposits.find_one(
+                {"user_id": user["_id"], "status": "approved"},
+                sort=[("deposited_at", 1)],
+            )
+            if not deposit:
+                deposit = await db.deposits.find_one(
+                    {"user_id": user["_id"]},
+                    sort=[("deposited_at", -1)],
+                )
+
+            acct_date_obj = None
+            if deposit and deposit.get("deposit_date"):
+                try:
+                    acct_date_obj = datetime.strptime(str(deposit["deposit_date"]).split("T")[0], "%Y-%m-%d")
+                except Exception:
+                    pass
+            if not acct_date_obj and user.get("created_at"):
+                try:
+                    acct_date_obj = user["created_at"] if isinstance(user["created_at"], datetime) else datetime.fromisoformat(str(user["created_at"]).replace("Z", "+00:00"))
+                except Exception:
+                    pass
+            if not acct_date_obj:
+                acct_date_obj = now
+
+            lock_date_obj = (deposit.get("lock_until") if deposit else None) or user.get("lock_until") or (acct_date_obj + relativedelta(months=6))
+            if isinstance(lock_date_obj, str):
+                try:
+                    lock_date_obj = datetime.fromisoformat(lock_date_obj.replace("Z", "+00:00"))
+                except Exception:
+                    lock_date_obj = acct_date_obj + relativedelta(months=6)
+
+            earn = await compute_user_balances(user["_id"])
+            amt = (deposit.get("amount") if deposit else None) or earn.get("principal", 0)
+            pdf_data = {
+                "name": user.get("name", "—"),
+                "client_id": user.get("client_id", "—"),
+                "account_opening_date": acct_date_obj.strftime("%d/%m/%Y"),
+                "locking_period_end_date": lock_date_obj.strftime("%d/%m/%Y"),
+                "amount": amt,
+                "payment_type": (deposit.get("payment_method") if deposit else None) or user.get("payment_type") or "Cash",
+                "remark": (deposit.get("remarks") if deposit else None) or user.get("nominee") or "SHIVAM",
+                "generated_date": f"{now.day}/{now.month}/{now.year}",
+            }
+
+    await ensure_default_terms_seeded()
+    terms_cursor = db.pdf_terms.find({"enabled": True}).sort("order", 1)
+    active_terms = await terms_cursor.to_list(length=300)
+    if not active_terms:
+        active_terms = DEFAULT_TERMS
+
+    pdf_bytes = generate_deposit_form_pdf(pdf_data, terms_list=active_terms)
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": 'inline; filename="Customer_Deposit_Form_Preview.pdf"',
             "Cache-Control": "no-cache, no-store, must-revalidate",
         },
     )

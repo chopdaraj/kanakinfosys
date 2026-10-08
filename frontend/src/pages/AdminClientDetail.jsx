@@ -207,6 +207,15 @@ export default function AdminClientDetail() {
                   <Eye className="w-3.5 h-3.5 text-slate-500" />
                   <span>{previewingPdf ? "Loading..." : "Preview PDF"}</span>
                 </button>
+
+                <Link
+                  to="/admin/pdf-settings"
+                  title="Configure Terms & Conditions and PDF settings"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 bg-orange-50 hover:bg-orange-100 text-[#F26522] border border-orange-200 rounded-xl text-xs font-bold transition"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Terms Editor</span>
+                </Link>
               </div>
 
               {/* KYC Controls */}

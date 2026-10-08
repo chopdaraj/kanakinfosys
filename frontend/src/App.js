@@ -24,6 +24,7 @@ const AdminClientDetail = React.lazy(() => import("@/pages/AdminClientDetail"));
 const AdminWithdrawals = React.lazy(() => import("@/pages/AdminWithdrawals"));
 const AdminSettings = React.lazy(() => import("@/pages/AdminSettings"));
 const AdminBroadcasts = React.lazy(() => import("@/pages/AdminBroadcasts"));
+const AdminPdfSettings = React.lazy(() => import("@/pages/AdminPdfSettings"));
 
 function HomeRoute() {
   return <Landing />;
@@ -168,6 +169,14 @@ export default function App() {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminBroadcasts />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/pdf-settings"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminPdfSettings />
                   </ProtectedRoute>
                 }
               />
