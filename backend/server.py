@@ -9,10 +9,16 @@ import io
 import logging
 import secrets
 import string
+import re
 from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
 from typing import Optional, List
-from pdf_generator import generate_deposit_form_pdf, DEFAULT_TERMS
+from pdf_generator import (
+    generate_deposit_form_pdf,
+    generate_client_account_pdf,
+    get_client_account_pdf_filename,
+    DEFAULT_TERMS
+)
 
 import asyncio
 import bcrypt
@@ -57,6 +63,19 @@ def verify_password(pw: str, hashed: str) -> bool:
         return bcrypt.checkpw(pw.encode(), hashed.encode())
     except Exception:
         return False
+
+
+def validate_password_complexity(password: str) -> None:
+    if not password or len(password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
+    if not re.search(r"[A-Z]", password):
+        raise HTTPException(status_code=400, detail="Password must contain at least one uppercase letter (A-Z)")
+    if not re.search(r"[a-z]", password):
+        raise HTTPException(status_code=400, detail="Password must contain at least one lowercase letter (a-z)")
+    if not re.search(r"\d", password):
+        raise HTTPException(status_code=400, detail="Password must contain at least one number (0-9)")
+    if not re.search(r"[!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?]", password):
+        raise HTTPException(status_code=400, detail="Password must contain at least one special character")
 
 
 def create_access_token(user_id: str, email: str, role: str) -> str:
@@ -109,6 +128,13 @@ def serialize_user(u: dict) -> dict:
         "phone": u.get("phone", ""),
         "email_verified": u.get("email_verified", False),
         "mobile_verified": u.get("mobile_verified", False),
+        "must_change_password": bool(u.get("must_change_password", False)),
+        "password_status": "initial" if u.get("must_change_password", False) else "changed",
+        "account_status": u.get("account_status", "active"),
+        "joining_date": u.get("joining_date") or (u.get("created_at").strftime("%d/%m/%Y") if u.get("created_at") else ""),
+        "investment_amount": float(u.get("investment_amount", 0.0)),
+        "pdf_generated_at": u.get("pdf_generated_at").isoformat() if isinstance(u.get("pdf_generated_at"), datetime) else u.get("pdf_generated_at"),
+        "last_login": u.get("last_login").isoformat() if isinstance(u.get("last_login"), datetime) else u.get("last_login"),
         "created_at": u.get("created_at").isoformat() if u.get("created_at") else None,
     }
 
@@ -266,12 +292,39 @@ class RegisterIn(BaseModel):
 
 
 class LoginIn(BaseModel):
-    email: EmailStr
+    email: str  # Can be email, client_id (e.g. KNK0052), or mobile number
     password: str
 
 
 class ChangePasswordIn(BaseModel):
-    new_password: str = Field(min_length=6)
+    current_password: Optional[str] = None
+    new_password: str
+    confirm_password: Optional[str] = None
+
+
+class AdminCreateClientIn(BaseModel):
+    name: str
+    email: EmailStr
+    phone: str
+    client_id: Optional[str] = None
+    dob: Optional[str] = ""
+    address_line1: Optional[str] = ""
+    address_line2: Optional[str] = ""
+    city: Optional[str] = ""
+    state: Optional[str] = ""
+    pincode: Optional[str] = ""
+    pan_number: Optional[str] = ""
+    aadhaar_number: Optional[str] = ""
+    joining_date: Optional[str] = ""
+    investment_amount: Optional[float] = 0.0
+    referral_code: Optional[str] = ""  # optional sponsor code
+    account_status: Optional[str] = "active"
+    nominee: Optional[str] = ""
+    bank_name: Optional[str] = ""
+    account_holder: Optional[str] = ""
+    account_number: Optional[str] = ""
+    ifsc: Optional[str] = ""
+    branch_name: Optional[str] = ""
 
 
 class ProfileIn(BaseModel):
@@ -319,6 +372,13 @@ class AdminEditClientIn(BaseModel):
     pincode: Optional[str] = None
     branch_name: Optional[str] = None
     phone: Optional[str] = None
+    account_status: Optional[str] = None
+    investment_amount: Optional[float] = None
+    joining_date: Optional[str] = None
+
+
+class ClientStatusIn(BaseModel):
+    status: str
 
 
 
@@ -459,13 +519,32 @@ async def register(payload: RegisterIn, response: Response):
 
 @api.post("/auth/login")
 async def login(payload: LoginIn, response: Response):
-    email = payload.email.lower()
-    user = await db.users.find_one({"email": email})
+    ident = payload.email.strip()
+    ident_lower = ident.lower()
+    user = await db.users.find_one({
+        "$or": [
+            {"email": ident_lower},
+            {"client_id": ident.upper()},
+            {"client_id": ident},
+            {"phone": ident},
+        ]
+    })
     if not user or not verify_password(payload.password, user.get("password_hash", "")):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-    token = create_access_token(str(user["_id"]), email, user.get("role", "client"))
+        raise HTTPException(status_code=401, detail="Invalid Client ID / Email or password")
+
+    if user.get("account_status") == "inactive":
+        raise HTTPException(status_code=403, detail="Account is deactivated. Please contact Kanak Infosys administration.")
+
+    await db.users.update_one({"_id": user["_id"]}, {"$set": {"last_login": datetime.now(timezone.utc)}})
+
+    user_email = user.get("email", ident_lower)
+    token = create_access_token(str(user["_id"]), user_email, user.get("role", "client"))
     response.set_cookie("access_token", token, httponly=True, samesite="lax", max_age=ACCESS_TOKEN_MIN * 60, path="/")
-    return {"token": token, "user": serialize_user(user)}
+    return {
+        "token": token,
+        "user": serialize_user(user),
+        "must_change_password": bool(user.get("must_change_password", False))
+    }
 
 
 @api.post("/auth/logout")
@@ -589,11 +668,56 @@ async def update_profile(payload: ProfileIn, user: dict = Depends(get_current_us
     return serialize_user(updated)
 
 
+async def _perform_password_change(user: dict, payload: ChangePasswordIn):
+    validate_password_complexity(payload.new_password)
+    if payload.confirm_password and payload.new_password != payload.confirm_password:
+        raise HTTPException(status_code=400, detail="New passwords do not match")
+    
+    must_change = bool(user.get("must_change_password", False))
+    if not must_change:
+        if not payload.current_password or not verify_password(payload.current_password, user.get("password_hash", "")):
+            raise HTTPException(status_code=400, detail="Current password is incorrect")
+    else:
+        if payload.current_password and not verify_password(payload.current_password, user.get("password_hash", "")):
+            raise HTTPException(status_code=400, detail="Current temporary password is incorrect")
+
+    phone = (user.get("phone") or "").strip()
+    if phone and payload.new_password == phone:
+        raise HTTPException(status_code=400, detail="New password cannot be your mobile number")
+
+    new_hash = hash_password(payload.new_password)
+    await db.users.update_one(
+        {"_id": user["_id"]},
+        {"$set": {"password_hash": new_hash, "must_change_password": False}}
+    )
+    return {"ok": True, "message": "Password changed successfully"}
+
+
 @api.put("/users/change-password")
 async def change_password(payload: ChangePasswordIn, user: dict = Depends(get_current_user)):
-    new_hash = hash_password(payload.new_password)
-    await db.users.update_one({"_id": user["_id"]}, {"$set": {"password_hash": new_hash}})
-    return {"ok": True, "message": "Password changed successfully"}
+    return await _perform_password_change(user, payload)
+
+
+@api.post("/auth/change-password")
+async def auth_change_password(payload: ChangePasswordIn, user: dict = Depends(get_current_user)):
+    return await _perform_password_change(user, payload)
+
+
+@api.get("/auth/me/account-pdf")
+async def client_get_own_account_pdf(preview: bool = False, user: dict = Depends(get_current_user)):
+    pdf_bytes = generate_client_account_pdf(user)
+    cid = user.get("client_id") or str(user["_id"])
+    cname = user.get("name", "Client")
+    filename = get_client_account_pdf_filename(cid, cname)
+    disposition = "inline" if preview else "attachment"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'{disposition}; filename="{filename}"',
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+        },
+    )
 
 
 @api.post("/deposits")
@@ -1331,6 +1455,95 @@ async def admin_client_deposit_pdf(
     )
 
 
+@api.get("/admin/clients/{client_id}/account-pdf")
+async def admin_get_client_account_pdf(
+    client_id: str,
+    preview: bool = False,
+    admin: dict = Depends(require_admin),
+):
+    user = None
+    if ObjectId.is_valid(client_id):
+        user = await db.users.find_one({"_id": ObjectId(client_id)})
+    if not user:
+        user = await db.users.find_one({"client_id": client_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Client not found")
+
+    pdf_bytes = generate_client_account_pdf(user)
+    cid = user.get("client_id") or str(user["_id"])
+    cname = user.get("name", "Client")
+    filename = get_client_account_pdf_filename(cid, cname)
+    disposition = "inline" if preview else "attachment"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'{disposition}; filename="{filename}"',
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+        },
+    )
+
+
+@api.post("/admin/clients/{client_id}/generate-account-pdf")
+async def admin_regenerate_client_account_pdf(client_id: str, admin: dict = Depends(require_admin)):
+    user = None
+    if ObjectId.is_valid(client_id):
+        user = await db.users.find_one({"_id": ObjectId(client_id)})
+    if not user:
+        user = await db.users.find_one({"client_id": client_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Client not found")
+
+    now = datetime.now(timezone.utc)
+    await db.users.update_one({"_id": user["_id"]}, {"$set": {"pdf_generated_at": now}})
+    return {"ok": True, "message": "Account PDF regenerated successfully", "pdf_generated_at": now.isoformat()}
+
+
+@api.post("/admin/clients/{client_id}/reset-password")
+async def admin_reset_client_password(client_id: str, admin: dict = Depends(require_admin)):
+    u = None
+    if ObjectId.is_valid(client_id):
+        u = await db.users.find_one({"_id": ObjectId(client_id)})
+    if not u:
+        u = await db.users.find_one({"client_id": client_id})
+    if not u:
+        raise HTTPException(status_code=404, detail="Client not found")
+
+    phone = (u.get("phone") or "").strip()
+    if not phone:
+        raise HTTPException(status_code=400, detail="Client does not have a registered mobile number to reset password")
+
+    new_hash = hash_password(phone)
+    await db.users.update_one(
+        {"_id": u["_id"]},
+        {"$set": {"password_hash": new_hash, "must_change_password": True}}
+    )
+    return {
+        "ok": True,
+        "message": f"Password reset to registered mobile number ({phone}). Client will be required to change password upon next login.",
+        "temporary_password": phone,
+    }
+
+
+@api.put("/admin/clients/{client_id}/status")
+async def admin_update_client_status(client_id: str, payload: ClientStatusIn, admin: dict = Depends(require_admin)):
+    u = None
+    if ObjectId.is_valid(client_id):
+        u = await db.users.find_one({"_id": ObjectId(client_id)})
+    if not u:
+        u = await db.users.find_one({"client_id": client_id})
+    if not u:
+        raise HTTPException(status_code=404, detail="Client not found")
+
+    new_status = payload.status.lower().strip()
+    if new_status not in ["active", "inactive"]:
+        raise HTTPException(status_code=400, detail="Status must be either 'active' or 'inactive'")
+
+    await db.users.update_one({"_id": u["_id"]}, {"$set": {"account_status": new_status}})
+    return {"ok": True, "account_status": new_status}
+
+
 @api.get("/admin/pdf/terms")
 async def admin_get_pdf_terms(admin: dict = Depends(require_admin)):
     await ensure_default_terms_seeded()
@@ -1615,6 +1828,132 @@ async def admin_delete_client(user_id: str, admin: dict = Depends(require_admin)
     await db.profit_credits.delete_many({"user_id": oid})
     await db.users.delete_one({"_id": oid})
     return {"ok": True}
+
+
+@api.post("/admin/clients")
+async def admin_create_client(payload: AdminCreateClientIn, admin: dict = Depends(require_admin)):
+    name = (payload.name or "").strip()
+    email = (payload.email or "").strip().lower()
+    phone = (payload.phone or "").strip()
+
+    if not name:
+        raise HTTPException(status_code=400, detail="Client full name is required")
+    if not phone or len(phone) < 10:
+        raise HTTPException(status_code=400, detail="A valid 10-digit mobile number is required")
+
+    # Check duplicate email
+    if await db.users.find_one({"email": email}):
+        raise HTTPException(status_code=400, detail=f"Email '{email}' is already registered")
+
+    # Check duplicate phone
+    if await db.users.find_one({"phone": phone}):
+        raise HTTPException(status_code=400, detail=f"Mobile number '{phone}' is already registered")
+
+    # Client ID handling
+    client_id = None
+    serial_num = None
+    if payload.client_id and payload.client_id.strip():
+        cid = payload.client_id.strip().upper()
+        if await db.users.find_one({"client_id": cid}):
+            raise HTTPException(status_code=400, detail=f"Client ID '{cid}' is already in use")
+        client_id = cid
+        digits = "".join(filter(str.isdigit, cid))
+        serial_num = int(digits) if digits else None
+    else:
+        # Auto-generate unique sequential KNK#### starting at 51
+        max_user = await db.users.find_one({"role": "client"}, sort=[("serial_number", -1)])
+        next_serial = (max_user["serial_number"] + 1) if max_user and "serial_number" in max_user and max_user["serial_number"] >= 51 else 51
+        while True:
+            cid = f"KNK{next_serial:04d}"
+            code = f"CLI{next_serial:04d}"
+            if not await db.users.find_one({"$or": [{"serial_number": next_serial}, {"client_id": cid}, {"referral_code": code}]}):
+                client_id = cid
+                serial_num = next_serial
+                break
+            next_serial += 1
+
+    ref_code = f"CLI{serial_num:04d}" if serial_num else f"CLI{secrets.randbelow(9000)+1000}"
+    referred_by = None
+    if payload.referral_code and payload.referral_code.strip():
+        sp = payload.referral_code.strip().upper()
+        parent = await db.users.find_one({
+            "$or": [{"referral_code": sp}, {"referral_code": sp.lower()}, {"client_id": sp}]
+        })
+        if parent:
+            referred_by = parent.get("referral_code", sp)
+
+    now = datetime.now(timezone.utc)
+    joining_date_str = payload.joining_date.strip() if payload.joining_date and payload.joining_date.strip() else now.strftime("%d/%m/%Y")
+
+    # Default password is registered mobile number
+    default_password = phone
+    pw_hash = hash_password(default_password)
+
+    user_doc = {
+        "name": name,
+        "email": email,
+        "phone": phone,
+        "password_hash": pw_hash,
+        "role": "client",
+        "serial_number": serial_num,
+        "client_id": client_id,
+        "referral_code": ref_code,
+        "referred_by_code": referred_by,
+        "dob": (payload.dob or "").strip(),
+        "address_line1": (payload.address_line1 or "").strip(),
+        "address_line2": (payload.address_line2 or "").strip(),
+        "city": (payload.city or "").strip(),
+        "state": (payload.state or "").strip(),
+        "pincode": (payload.pincode or "").strip(),
+        "pan_number": (payload.pan_number or "").strip().upper(),
+        "aadhaar_number": (payload.aadhaar_number or "").strip(),
+        "joining_date": joining_date_str,
+        "investment_amount": float(payload.investment_amount or 0.0),
+        "account_status": payload.account_status or "active",
+        "nominee": (payload.nominee or "").strip(),
+        "bank_name": (payload.bank_name or "").strip(),
+        "account_holder": (payload.account_holder or "").strip(),
+        "account_number": (payload.account_number or "").strip(),
+        "ifsc": (payload.ifsc or "").strip().upper(),
+        "branch_name": (payload.branch_name or "").strip(),
+        "kyc_status": "verified" if (payload.pan_number and payload.aadhaar_number) else "not_started",
+        "email_verified": True,
+        "mobile_verified": True,
+        "must_change_password": True,
+        "created_at": now,
+        "pdf_generated_at": now,
+    }
+
+    res = await db.users.insert_one(user_doc)
+    user_doc["_id"] = res.inserted_id
+
+    # Record initial investment deposit if investment_amount > 0
+    if float(payload.investment_amount or 0.0) > 0:
+        inv_amt = float(payload.investment_amount)
+        lock_until = now + relativedelta(months=6)
+        deposit_doc = {
+            "user_id": res.inserted_id,
+            "amount": inv_amt,
+            "payment_method": "Account Opening Deposit",
+            "transaction_id": f"INIT-{client_id}",
+            "deposit_date": now.strftime("%Y-%m-%d"),
+            "remarks": "Initial Account Investment",
+            "deposited_at": now,
+            "approved_at": now,
+            "lock_until": lock_until,
+            "status": "approved",
+            "payment_screenshot": "",
+        }
+        await db.deposits.insert_one(deposit_doc)
+
+    return {
+        "ok": True,
+        "message": "Client account created successfully.",
+        "user": serialize_user(user_doc),
+        "client_id": client_id,
+        "temporary_password": default_password,
+        "must_change_password": True,
+    }
 
 
 @api.get("/admin/clients")

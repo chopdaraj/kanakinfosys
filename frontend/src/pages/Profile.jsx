@@ -3,7 +3,20 @@ import ClientLayout from "@/components/ClientLayout";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { Upload, Camera, ShieldCheck, ShieldAlert, KeyRound, Building2, UserCircle2, Landmark, CheckCircle, Trash2 } from "lucide-react";
+import { 
+  Upload, 
+  Camera, 
+  ShieldCheck, 
+  ShieldAlert, 
+  KeyRound, 
+  Building2, 
+  UserCircle2, 
+  Landmark, 
+  CheckCircle, 
+  Trash2,
+  Download,
+  FileText
+} from "lucide-react";
 import KycWizard from "@/components/KycWizard";
 import { useModal } from "@/context/ModalContext";
 
@@ -189,21 +202,59 @@ export default function Profile() {
     }
   };
 
+  const downloadMyAccountPdf = async () => {
+    toast.info("Generating your Account Form PDF...");
+    try {
+      const response = await api.get("/auth/me/account-pdf", { responseType: "blob" });
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const cid = user?.client_id || "Account";
+      a.download = `KANAK_INFOSYS_Client_${cid}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Account PDF downloaded successfully.");
+    } catch (e) {
+      toast.error("Failed to download Account PDF");
+    }
+  };
+
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (passwordForm.new_password !== passwordForm.confirm_password) {
       toast.error("New passwords do not match!");
       return;
     }
-    if (passwordForm.new_password.length < 6) {
-      toast.error("New password must be at least 6 characters long");
+    if (passwordForm.new_password.length < 8) {
+      toast.error("New password must be at least 8 characters long");
       return;
     }
+    if (!/[A-Z]/.test(passwordForm.new_password)) {
+      toast.error("Password must contain at least one uppercase letter (A-Z)");
+      return;
+    }
+    if (!/[a-z]/.test(passwordForm.new_password)) {
+      toast.error("Password must contain at least one lowercase letter (a-z)");
+      return;
+    }
+    if (!/\d/.test(passwordForm.new_password)) {
+      toast.error("Password must contain at least one number (0-9)");
+      return;
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(passwordForm.new_password)) {
+      toast.error("Password must contain at least one special character");
+      return;
+    }
+
     setChangingPassword(true);
     try {
-      // Secure password change endpoint
       await api.put("/users/change-password", {
-        new_password: passwordForm.new_password
+        current_password: passwordForm.current_password,
+        new_password: passwordForm.new_password,
+        confirm_password: passwordForm.confirm_password,
       });
       toast.success("Password changed successfully!");
       setPasswordForm({ current_password: "", new_password: "", confirm_password: "" });
@@ -218,12 +269,23 @@ export default function Profile() {
     <ClientLayout>
       <div className="space-y-8" data-testid="profile-page">
         {/* Header */}
-        <div>
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">User Identity settings</span>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mt-1">Profile & KYC</h1>
-          <p className="text-slate-500 text-sm mt-1">
-            Maintain verified records for secure compliance and direct payouts.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">User Identity settings</span>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mt-1">Profile & KYC</h1>
+            <p className="text-slate-500 text-sm mt-1">
+              Maintain verified records for secure compliance and direct payouts.
+            </p>
+          </div>
+
+          <button
+            onClick={downloadMyAccountPdf}
+            className="px-4 py-2.5 bg-gradient-to-r from-[#F26522] to-[#EA580C] hover:from-[#EA580C] hover:to-[#D9480F] text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm shadow-orange-500/20 active:scale-95 transition-all cursor-pointer self-start sm:self-auto"
+            title="Download Official Client Account Onboarding PDF"
+          >
+            <Download className="w-4 h-4" />
+            <span>Download Account PDF</span>
+          </button>
         </div>
 
         {/* KYC Alert Header */}

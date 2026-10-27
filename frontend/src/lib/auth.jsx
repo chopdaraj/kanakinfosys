@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }) => {
     const { data } = await api.post("/auth/login", { email, password });
     localStorage.setItem("kanak_token", data.token);
     setUser(data.user);
-    return data.user;
+    return { ...data.user, ...data };
   };
 
   const register = async (payload) => {
@@ -42,6 +42,12 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("kanak_token", data.token);
     setUser(data.user);
     return data.user;
+  };
+
+  const changePassword = async (payload) => {
+    const { data } = await api.post("/auth/change-password", payload);
+    await fetchMe();
+    return data;
   };
 
   const logout = async () => {
@@ -57,7 +63,7 @@ export const AuthProvider = ({ children }) => {
   const refreshUser = fetchMe;
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, changePassword, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

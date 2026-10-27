@@ -12,7 +12,11 @@ import {
   ArrowRight, 
   ShieldCheck, 
   BarChart3, 
-  Users 
+  Users,
+  CheckCircle2,
+  XCircle,
+  KeyRound,
+  ShieldAlert
 } from "lucide-react";
 
 const formatErr = (d) => {
@@ -28,20 +32,79 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  
+  // Forced password change state
+  const [mustChangeModal, setMustChangeModal] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [changeLoading, setChangeLoading] = useState(false);
+
+  const { login, changePassword } = useAuth();
   const navigate = useNavigate();
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const u = await login(email, password);
-      toast.success(`Welcome back, ${u.name}`);
-      navigate(u.role === "admin" ? "/admin" : "/dashboard");
+      const resp = await login(email, password);
+      if (resp.must_change_password) {
+        setCurrentUser(resp.user || resp);
+        setMustChangeModal(true);
+        toast.info("Initial Password detected. Please set your new password to proceed.");
+      } else {
+        toast.success(`Welcome back, ${resp.name || resp.user?.name}`);
+        navigate((resp.role || resp.user?.role) === "admin" ? "/admin" : "/dashboard");
+      }
     } catch (err) {
       toast.error(formatErr(err.response?.data?.detail) || err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForcedPasswordChange = async (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      return;
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      toast.error("Password must contain at least one uppercase letter (A-Z)");
+      return;
+    }
+    if (!/[a-z]/.test(newPassword)) {
+      toast.error("Password must contain at least one lowercase letter (a-z)");
+      return;
+    }
+    if (!/\d/.test(newPassword)) {
+      toast.error("Password must contain at least one number (0-9)");
+      return;
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword)) {
+      toast.error("Password must contain at least one special character");
+      return;
+    }
+
+    setChangeLoading(true);
+    try {
+      await changePassword({
+        current_password: password,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      });
+      toast.success("Password changed successfully! Redirecting...");
+      setMustChangeModal(false);
+      navigate(currentUser?.role === "admin" ? "/admin" : "/dashboard");
+    } catch (err) {
+      toast.error(formatErr(err.response?.data?.detail) || err.message);
+    } finally {
+      setChangeLoading(false);
     }
   };
 
@@ -180,22 +243,22 @@ export default function Login() {
               {/* Form Input Fields */}
               <div className="space-y-3.5 sm:space-y-4 pt-1 w-full min-w-0">
                 
-                {/* EMAIL */}
+                {/* CLIENT ID / EMAIL / MOBILE */}
                 <div className="w-full min-w-0">
                   <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                    Email Address
+                    Client ID / Email / Mobile
                   </label>
                   <div className="relative w-full min-w-0">
                     <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                       <Mail className="w-4 h-4" />
                     </span>
                     <input
-                      type="email"
+                      type="text"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       data-testid="login-email-input"
-                      placeholder="you@company.com"
+                      placeholder="e.g. KNK0052, mobile number, or email"
                       className="w-full min-w-0 pl-10 pr-4 py-2.5 sm:py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#F26522]/15 focus:border-[#F26522] transition-all font-normal"
                     />
                   </div>
@@ -263,10 +326,128 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Bottom spacer on right panel */}
-        <div className="hidden sm:block h-2" />
-
       </section>
+
+      {/* ================= FORCED PASSWORD CHANGE MODAL ================= */}
+      {mustChangeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-5 animate-in zoom-in-95 duration-200">
+            
+            {/* Modal Header */}
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center text-[#F26522] shrink-0">
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-[#F26522] uppercase tracking-wider block">
+                  First Login Security
+                </span>
+                <h3 className="text-xl font-bold text-slate-900 font-display">
+                  Set Your Secure Password
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Your temporary password was your mobile number. You must create a new strong password before accessing your account.
+                </p>
+              </div>
+            </div>
+
+            {/* Password Form */}
+            <form onSubmit={handleForcedPasswordChange} className="space-y-4">
+              
+              {/* New Password */}
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  New Password
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Lock className="w-4 h-4" />
+                  </span>
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    className="w-full pl-9 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#F26522]/20 focus:border-[#F26522] transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                  >
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm New Password */}
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Lock className="w-4 h-4" />
+                  </span>
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter new password"
+                    className="w-full pl-9 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#F26522]/20 focus:border-[#F26522] transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Password Requirements Checklist */}
+              <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-1.5 text-[11px]">
+                <div className="font-semibold text-slate-700 mb-1">Password Requirements:</div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <div className={`flex items-center gap-1.5 ${newPassword.length >= 8 ? 'text-emerald-600 font-medium' : 'text-slate-400'}`}>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>8+ Characters</span>
+                  </div>
+                  <div className={`flex items-center gap-1.5 ${/[A-Z]/.test(newPassword) ? 'text-emerald-600 font-medium' : 'text-slate-400'}`}>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Uppercase (A-Z)</span>
+                  </div>
+                  <div className={`flex items-center gap-1.5 ${/[a-z]/.test(newPassword) ? 'text-emerald-600 font-medium' : 'text-slate-400'}`}>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Lowercase (a-z)</span>
+                  </div>
+                  <div className={`flex items-center gap-1.5 ${/\d/.test(newPassword) ? 'text-emerald-600 font-medium' : 'text-slate-400'}`}>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Number (0-9)</span>
+                  </div>
+                  <div className={`flex items-center gap-1.5 ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword) ? 'text-emerald-600 font-medium' : 'text-slate-400'}`}>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Special character</span>
+                  </div>
+                  <div className={`flex items-center gap-1.5 ${newPassword && newPassword === confirmPassword ? 'text-emerald-600 font-medium' : 'text-slate-400'}`}>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Passwords match</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex flex-col gap-2">
+                <button
+                  type="submit"
+                  disabled={changeLoading}
+                  className="w-full py-3 bg-gradient-to-r from-[#F26522] to-[#EA580C] hover:from-[#EA580C] hover:to-[#D9480F] text-white rounded-xl text-sm font-bold shadow-lg shadow-orange-500/25 active:scale-[0.99] transition-all disabled:opacity-70 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>{changeLoading ? "Updating Password..." : "Update Password & Enter Dashboard"}</span>
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );

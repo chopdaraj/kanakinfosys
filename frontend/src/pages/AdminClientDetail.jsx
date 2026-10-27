@@ -3,7 +3,22 @@ import { useParams, Link } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { api, formatINR, formatDate, formatKycStatus } from "@/lib/api";
 import { toast } from "sonner";
-import { ArrowLeft, Coins, Landmark, User, FileText, CheckCircle2, XCircle, ShieldCheck, Download, Eye, X } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Coins, 
+  Landmark, 
+  User, 
+  FileText, 
+  CheckCircle2, 
+  XCircle, 
+  ShieldCheck, 
+  Download, 
+  Eye, 
+  X,
+  KeyRound,
+  RotateCcw,
+  Power
+} from "lucide-react";
 
 const Row = ({ label, value, mono }) => (
   <div className="flex justify-between py-2.5 border-b border-slate-50 last:border-0 text-xs">
@@ -75,6 +90,78 @@ export default function AdminClientDetail() {
     if (pdfPreviewUrl) {
       window.URL.revokeObjectURL(pdfPreviewUrl);
       setPdfPreviewUrl(null);
+    }
+  };
+
+  const downloadAccountPdf = async () => {
+    setDownloadingPdf(true);
+    toast.info("Generating Account Onboarding PDF...");
+    try {
+      const response = await api.get(`/admin/clients/${id}/account-pdf`, {
+        responseType: "blob",
+      });
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const cid = detail?.user?.client_id || id;
+      const cname = (detail?.user?.name || "Client").replace(/[^a-zA-Z0-9_-]/g, "_");
+      link.setAttribute("download", `KANAK_INFOSYS_Client_${cid}_${cname}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("Account PDF downloaded successfully.");
+    } catch (err) {
+      console.error("Account PDF download error:", err);
+      toast.error("Unable to generate Account PDF.");
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
+  const previewAccountPdf = async () => {
+    setPreviewingPdf(true);
+    toast.info("Preparing Account PDF preview...");
+    try {
+      const response = await api.get(`/admin/clients/${id}/account-pdf?preview=true`, {
+        responseType: "blob",
+      });
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      setPdfPreviewUrl(url);
+      setShowPreviewModal(true);
+    } catch (err) {
+      console.error("Account PDF preview error:", err);
+      toast.error("Unable to generate PDF preview.");
+    } finally {
+      setPreviewingPdf(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    const phone = detail?.user?.phone || "";
+    if (!window.confirm(`Reset password for ${detail?.user?.name}? Password will be reset to registered mobile number (${phone}), and client will be forced to set a new password on their next login.`)) return;
+    try {
+      const { data } = await api.post(`/admin/clients/${id}/reset-password`);
+      toast.success(data.message || "Password reset successfully.");
+      await load();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to reset password");
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    const cur = detail?.user?.account_status || "active";
+    const next = cur === "active" ? "inactive" : "active";
+    const txt = next === "active" ? "activate" : "deactivate";
+    if (!window.confirm(`Are you sure you want to ${txt} this client account?`)) return;
+    try {
+      await api.put(`/admin/clients/${id}/status`, { status: next });
+      toast.success(`Client account ${txt}d successfully.`);
+      await load();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to update status");
     }
   };
 
@@ -185,56 +272,99 @@ export default function AdminClientDetail() {
               </p>
             </div>
             
-            <div className="flex flex-wrap items-center gap-3">
-              {/* PDF Actions */}
-              <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Account Onboarding PDF Actions */}
+              <div className="flex items-center gap-1.5 bg-orange-50/60 p-1.5 rounded-xl border border-orange-200/50">
+                <button
+                  onClick={downloadAccountPdf}
+                  disabled={downloadingPdf}
+                  data-testid="download-account-pdf"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#F26522] to-[#EA580C] hover:from-[#EA580C] hover:to-[#D9480F] text-white rounded-lg text-xs font-bold shadow-sm active:scale-[0.99] transition cursor-pointer disabled:opacity-70"
+                  title="Download Official Client Account Onboarding PDF"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Account PDF</span>
+                </button>
+                <button
+                  onClick={previewAccountPdf}
+                  disabled={previewingPdf}
+                  className="p-1.5 text-[#F26522] hover:bg-orange-100/70 rounded-lg transition cursor-pointer"
+                  title="Preview Account PDF"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Customer Deposit PDF Actions */}
+              <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-slate-200/60">
                 <button
                   onClick={downloadCustomerPdf}
                   disabled={downloadingPdf}
                   data-testid="download-customer-pdf"
-                  className="inline-flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-[#F26522] to-[#EA580C] hover:from-[#EA580C] hover:to-[#D9480F] text-white rounded-xl text-xs font-bold shadow-sm shadow-orange-500/20 active:scale-[0.99] transition cursor-pointer disabled:opacity-70"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold shadow-sm active:scale-[0.99] transition cursor-pointer disabled:opacity-70"
+                  title="Download Customer Deposit Form PDF"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span>{downloadingPdf ? "Generating PDF..." : "Download Customer PDF"}</span>
+                  <span>Deposit PDF</span>
                 </button>
-
                 <button
                   onClick={previewCustomerPdf}
                   disabled={previewingPdf}
-                  data-testid="preview-customer-pdf"
-                  className="inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-sm active:scale-[0.99] transition cursor-pointer disabled:opacity-70"
+                  className="p-1.5 text-slate-600 hover:bg-slate-200/60 rounded-lg transition cursor-pointer"
+                  title="Preview Deposit PDF"
                 >
-                  <Eye className="w-3.5 h-3.5 text-slate-500" />
-                  <span>{previewingPdf ? "Loading..." : "Preview PDF"}</span>
+                  <Eye className="w-3.5 h-3.5" />
                 </button>
-
                 <Link
                   to="/admin/pdf-settings"
-                  title="Configure Terms & Conditions and PDF settings"
-                  className="inline-flex items-center gap-1.5 px-3 py-2 bg-orange-50 hover:bg-orange-100 text-[#F26522] border border-orange-200 rounded-xl text-xs font-bold transition"
+                  title="Terms Editor"
+                  className="p-1.5 text-slate-600 hover:bg-slate-200/60 rounded-lg transition"
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  <span>Terms Editor</span>
                 </Link>
               </div>
 
+              {/* Password Reset */}
+              <button
+                onClick={handleResetPassword}
+                className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-xl text-xs font-semibold transition cursor-pointer"
+                title="Reset password to mobile number"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset Password</span>
+              </button>
+
+              {/* Status Toggle */}
+              <button
+                onClick={handleToggleStatus}
+                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+                  u.account_status === "inactive"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                    : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
+                }`}
+                title={u.account_status === "inactive" ? "Activate Account" : "Deactivate Account"}
+              >
+                <Power className="w-3.5 h-3.5" />
+                <span>{u.account_status === "inactive" ? "Activate" : "Deactivate"}</span>
+              </button>
+
               {/* KYC Controls */}
-              <div className="flex items-center gap-2.5 bg-white p-2 sm:p-2.5 rounded-2xl border border-slate-100 shadow-sm">
+              <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-slate-100 shadow-sm">
                 <span className="text-xs text-slate-500 font-semibold">KYC:</span>
-                <span className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border uppercase ${badgeClass(u.kyc_status)}`}>
+                <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border uppercase ${badgeClass(u.kyc_status)}`}>
                   {formatKycStatus(u.kyc_status)}
                 </span>
                 <button
                   onClick={() => updateKycStatus("verified")}
                   data-testid="kyc-verify"
-                  className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold uppercase transition"
+                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold uppercase transition cursor-pointer"
                 >
                   Verify
                 </button>
                 <button
                   onClick={() => updateKycStatus("rejected")}
                   data-testid="kyc-reject"
-                  className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-bold uppercase transition"
+                  className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-bold uppercase transition cursor-pointer"
                 >
                   Reject
                 </button>
@@ -286,6 +416,9 @@ export default function AdminClientDetail() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
                 <div>
+                  <Row label="Mobile" value={u.phone} mono />
+                  <Row label="Account Status" value={(u.account_status || "active").toUpperCase()} />
+                  <Row label="Password Status" value={u.must_change_password || u.password_status === "initial" ? "Initial (Mobile No.)" : "Changed by Client"} />
                   <Row label="Aadhaar" value={u.aadhaar_number} mono />
                   <Row label="PAN" value={u.pan_number} mono />
                   <Row label="Address 1" value={u.address_line1} />
@@ -293,13 +426,14 @@ export default function AdminClientDetail() {
                   <Row label="Referred By" value={u.referred_by_code || "—"} mono />
                 </div>
                 <div>
+                  <Row label="Initial Investment" value={u.investment_amount ? formatINR(u.investment_amount) : "—"} />
                   <Row label="Bank Name" value={u.bank_name} />
                   <Row label="Account Holder" value={u.account_holder} />
                   <Row label="Account No" value={u.account_number} mono />
                   <Row label="IFSC Code" value={u.ifsc} mono />
                   <Row label="Branch Name" value={u.branch_name} />
                   <Row label="Nominee" value={u.nominee} />
-                  <Row label="Joined" value={formatDate(u.created_at)} />
+                  <Row label="Joining Date" value={u.joining_date || formatDate(u.created_at)} />
                 </div>
               </div>
             )}

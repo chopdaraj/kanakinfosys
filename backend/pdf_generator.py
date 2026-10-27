@@ -385,3 +385,270 @@ def generate_deposit_form_pdf(client_data: dict, terms_list: list = None) -> byt
     pdf_bytes = buffer.getvalue()
     buffer.close()
     return pdf_bytes
+
+
+def sanitize_filename_part(text: str) -> str:
+    import re
+    if not text:
+        return "Client"
+    cleaned = re.sub(r'[^A-Za-z0-9]+', '_', str(text).strip())
+    return cleaned.strip('_') or "Client"
+
+
+def get_client_account_pdf_filename(client_id: str, client_name: str) -> str:
+    cid = sanitize_filename_part(client_id)
+    cname = sanitize_filename_part(client_name)
+    return f"KANAK_INFOSYS_Client_{cid}_{cname}.pdf"
+
+
+def generate_client_account_pdf(data: dict, terms_list: list = None) -> bytes:
+    """
+    Generates the official Kanak Infosys Client Account Creation PDF.
+    Contains client details, investment details, confidential login credentials,
+    and security instructions.
+    """
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=48,
+        rightMargin=48,
+        topMargin=135,
+        bottomMargin=140,
+    )
+    
+    content_w = PAGE_WIDTH - 96
+    story = []
+
+    # Title
+    title_style = ParagraphStyle(
+        name='AccountMainTitle',
+        fontName='Helvetica-Bold',
+        fontSize=15,
+        leading=18,
+        textColor=TITLE_DARK,
+        alignment=1,
+    )
+    sub_title_style = ParagraphStyle(
+        name='AccountSubTitle',
+        fontName='Helvetica-Bold',
+        fontSize=8.5,
+        leading=11,
+        textColor=ORANGE_THEME,
+        alignment=1,
+    )
+    story.append(Paragraph('CLIENT ACCOUNT DETAILS', title_style))
+    story.append(Spacer(1, 3))
+    story.append(Paragraph('KANAK INFOSYS', sub_title_style))
+    story.append(Spacer(1, 10))
+
+    sec_heading_style = ParagraphStyle(
+        name='AccountSecHeading',
+        fontName='Helvetica-Bold',
+        fontSize=9,
+        leading=12,
+        textColor=ORANGE_THEME,
+    )
+    div_table = Table([['']], colWidths=[content_w], rowHeights=[0.75])
+    div_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), LINE_COLOR),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+    ]))
+
+    lbl_style = ParagraphStyle(
+        name='AccountDetailLbl',
+        fontName='Helvetica-Bold',
+        fontSize=7.6,
+        leading=10,
+        textColor=TEXT_LABEL,
+    )
+    val_style = ParagraphStyle(
+        name='AccountDetailVal',
+        fontName='Helvetica-Bold',
+        fontSize=8.2,
+        leading=11,
+        textColor=TITLE_DARK,
+    )
+
+    col1_w = 155
+    col2_w = content_w - col1_w
+
+    def make_zebra_table(fields, row_h=19):
+        t_data = [[Paragraph(k, lbl_style), Paragraph(str(v), val_style)] for k, v in fields]
+        t = Table(t_data, colWidths=[col1_w, col2_w], rowHeights=[row_h]*len(fields))
+        styles = [
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 0),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+        ]
+        for i in range(len(fields)):
+            bg = ROW_LIGHT if i % 2 == 0 else ROW_WHITE
+            styles.append(('BACKGROUND', (0, i), (-1, i), bg))
+        t.setStyle(TableStyle(styles))
+        return t
+
+    # 1. CLIENT INFORMATION
+    story.append(Paragraph('CLIENT INFORMATION', sec_heading_style))
+    story.append(Spacer(1, 3))
+    story.append(div_table)
+    story.append(Spacer(1, 5))
+
+    city_state_pin = ", ".join(filter(None, [data.get('city'), data.get('state'), data.get('pincode')])) or "—"
+    joining = data.get('joining_date') or datetime.now().strftime('%d/%m/%Y')
+    
+    address_str = data.get('address') or data.get('address_line1') or "—"
+    if data.get('address_line2'):
+        address_str = f"{address_str}, {data.get('address_line2')}"
+
+    client_fields = [
+        ('CLIENT FULL NAME', (data.get('name') or data.get('full_name') or '—').upper()),
+        ('CLIENT ID', (data.get('client_id') or '—').upper()),
+        ('REGISTERED MOBILE', data.get('phone') or data.get('mobile') or '—'),
+        ('EMAIL ADDRESS', data.get('email') or '—'),
+        ('DATE OF BIRTH', data.get('dob') or '—'),
+        ('JOINING DATE', joining),
+        ('ADDRESS', address_str),
+        ('CITY / STATE / PINCODE', city_state_pin),
+    ]
+    if data.get('pan_number'):
+        client_fields.append(('PAN NUMBER', str(data.get('pan_number')).upper()))
+    if data.get('aadhaar_number'):
+        client_fields.append(('AADHAAR NUMBER', str(data.get('aadhaar_number'))))
+
+    story.append(make_zebra_table(client_fields, row_h=19))
+    story.append(Spacer(1, 10))
+
+    # 2. ACCOUNT INFORMATION
+    story.append(Paragraph('ACCOUNT INFORMATION', sec_heading_style))
+    story.append(Spacer(1, 3))
+    story.append(div_table)
+    story.append(Spacer(1, 5))
+
+    amt = data.get('investment_amount', 0)
+    amt_str = f"Rs. {format_inr_amount(amt)}"
+    acct_status = (data.get('account_status') or 'active').capitalize()
+    kyc_status = (data.get('kyc_status') or 'pending').upper()
+
+    acct_fields = [
+        ('INVESTMENT AMOUNT', amt_str),
+        ('REFERRAL CODE', data.get('referral_code') or '—'),
+        ('ACCOUNT STATUS', acct_status),
+        ('KYC STATUS', kyc_status),
+    ]
+    story.append(make_zebra_table(acct_fields, row_h=19))
+    story.append(Spacer(1, 10))
+
+    # 3. LOGIN INFORMATION & CREDENTIALS
+    story.append(Paragraph('CLIENT LOGIN CREDENTIALS', sec_heading_style))
+    story.append(Spacer(1, 3))
+    story.append(div_table)
+    story.append(Spacer(1, 5))
+
+    login_id = data.get('client_id') or data.get('email') or '—'
+    initial_pass = data.get('initial_password') or data.get('phone') or data.get('mobile') or '••••••••'
+
+    login_fields = [
+        ('USERNAME / CLIENT ID', login_id),
+        ('INITIAL PASSWORD', f"{initial_pass}   (Confidential — Registered Mobile)"),
+        ('LOGIN PORTAL URL', 'https://kanakinfosys.com/login'),
+    ]
+    t_login = make_zebra_table(login_fields, row_h=20)
+    story.append(t_login)
+    story.append(Spacer(1, 10))
+
+    # 4. IMPORTANT SECURITY NOTICE
+    notice_title_style = ParagraphStyle(
+        name='NoticeTitle',
+        fontName='Helvetica-Bold',
+        fontSize=8.2,
+        leading=11,
+        textColor=ORANGE_THEME,
+    )
+    notice_body_style = ParagraphStyle(
+        name='NoticeBody',
+        fontName='Helvetica',
+        fontSize=7.6,
+        leading=10.5,
+        textColor=colors.HexColor('#554433'),
+    )
+
+    notice_content = [
+        Paragraph('<b>IMPORTANT SECURITY NOTICE</b>', notice_title_style),
+        Spacer(1, 2),
+        Paragraph(
+            'This document contains confidential account information. The initial password provided above is temporary '
+            'and must be changed immediately after your first successful login. For your protection, never share your login credentials, '
+            'passwords, or OTP codes with anyone. Kanak Infosys representatives will never ask for your account password.',
+            notice_body_style
+        ),
+    ]
+    notice_table = Table([[notice_content]], colWidths=[content_w])
+    notice_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#FFF9F5')),
+        ('BOX', (0, 0), (-1, -1), 0.75, colors.HexColor('#F8C8A0')),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    story.append(notice_table)
+    story.append(Spacer(1, 20))
+
+    # 5. DUAL SIGNATURE BLOCK
+    sig_lbl_style = ParagraphStyle(
+        name='AccountSigLabel',
+        fontName='Helvetica',
+        fontSize=8.0,
+        leading=10,
+        textColor=TITLE_DARK,
+        alignment=1,
+    )
+    sig_line_w = 190
+    sig_gap = content_w - (sig_line_w * 2)
+
+    sig_table_data = [
+        [
+            Table([['']], colWidths=[sig_line_w], rowHeights=[0.75]),
+            '',
+            Table([['']], colWidths=[sig_line_w], rowHeights=[0.75]),
+        ],
+        [
+            Paragraph('Customer Signature', sig_lbl_style),
+            '',
+            Paragraph('Authorised Signatory — Kanak Infosys', sig_lbl_style),
+        ]
+    ]
+    sig_table = Table(
+        sig_table_data,
+        colWidths=[sig_line_w, sig_gap, sig_line_w],
+        rowHeights=[2, 16],
+    )
+    sig_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, 0), SIG_LINE_COLOR),
+        ('BACKGROUND', (2, 0), (2, 0), SIG_LINE_COLOR),
+        ('ALIGN', (0, 1), (-1, 1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+    ]))
+
+    story.append(BottomPinnedSignature(sig_table))
+
+    doc.build(
+        story,
+        canvasmaker=NumberedCanvas,
+        onFirstPage=draw_background,
+        onLaterPages=draw_background,
+    )
+
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    return pdf_bytes
+
