@@ -266,18 +266,9 @@ export default function Login() {
 
                 {/* PASSWORD */}
                 <div className="w-full min-w-0">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-slate-700">
-                      Password
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => toast.info("Password recovery: Contact support@kanakinfosys.com or your administrator.")}
-                      className="text-xs text-[#F26522] font-semibold hover:underline transition-colors"
-                    >
-                      Forgot password?
-                    </button>
-                  </div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+                    Password
+                  </label>
                   <div className="relative w-full min-w-0">
                     <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                       <Lock className="w-4 h-4" />
